@@ -1,7 +1,8 @@
 import './style.css'
 import { supabase } from './lib/supabase'
+import { createStageScaler } from './ui/StageScaler'
 
-async function loadJackpots(): Promise<void> {
+async function loadGame(): Promise<void> {
   const { data, error } = await supabase
     .from('jackpot_state')
     .select('major_value, grand_value')
@@ -10,19 +11,77 @@ async function loadJackpots(): Promise<void> {
 
   if (error) {
     console.error('Failed to load jackpots:', error)
-    return
   }
 
   document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-    <main id="game">
-      <h1>Quest of Fortune</h1>
+    <div class="stage-viewport">
+      <main class="game-stage">
 
-      <p id="major">MAJOR: ${data.major_value}</p>
-      <p id="grand">GRAND: ${data.grand_value}</p>
+        <header class="title-zone">
+          <h1>QUEST OF FORTUNE</h1>
+        </header>
 
-      <button id="contribute" disabled>CONTRIBUTE</button>
-    </main>
+        <section class="jackpot-zone">
+          <div class="jackpot-card jackpot-card--grand">
+            <span class="jackpot-label">GRAND</span>
+            <strong>${data ? data.grand_value : '--'}</strong>
+          </div>
+
+          <div class="jackpot-card jackpot-card--mini">
+            <span class="jackpot-label">MINI</span>
+            <strong>$20.00</strong>
+          </div>
+
+          <div class="jackpot-card jackpot-card--major">
+            <span class="jackpot-label">MAJOR</span>
+            <strong>${data ? data.major_value : '--'}</strong>
+          </div>
+
+          <div class="jackpot-card jackpot-card--minor">
+            <span class="jackpot-label">MINOR</span>
+            <strong>$50.00</strong>
+          </div>
+        </section>
+
+        <section class="reel-zone">
+          <div class="reel-grid">
+            ${Array.from({ length: 20 }, () => '<div class="symbol-cell"></div>').join('')}
+          </div>
+        </section>
+
+        <section class="message-zone">
+          WIN / FEATURE MESSAGE
+        </section>
+
+        <section class="hud-zone">
+          <div class="hud-item">
+            <span>BALANCE</span>
+            <strong>$100.00</strong>
+          </div>
+
+          <div class="hud-item">
+            <span>BET</span>
+            <strong>$1.00</strong>
+          </div>
+
+          <div class="hud-item">
+            <span>WIN</span>
+            <strong>$0.00</strong>
+          </div>
+        </section>
+
+        <section class="control-zone">
+          <button class="spin-button" disabled>SPIN</button>
+        </section>
+
+      </main>
+    </div>
   `
+
+  createStageScaler({
+    viewport: document.querySelector<HTMLDivElement>('.stage-viewport')!,
+    stage: document.querySelector<HTMLElement>('.game-stage')!,
+  })
 }
 
-void loadJackpots()
+void loadGame()
