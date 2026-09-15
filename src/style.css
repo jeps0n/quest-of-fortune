@@ -60,17 +60,58 @@ body {
   fantasy background remains untouched.
 */
 .game-presentation {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 700ms ease,
+    visibility 0s linear 0s;
+}
+.cabinet-art {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+
+  background-image: url('/quest-of-fortune/assets/cabinet/quest-cabinet.png');
+  background-position: center;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+
+  pointer-events: none;
+}
+
+/*
+  Decorative cabinet layer. It sits above the viewport background but below
+  all functional game UI. Keep it inside .game-presentation so LOOK OUT
+  automatically fades the cabinet and gameplay together.
+
+  When the cabinet asset is ready, set background-image here.
+*/
+.cabinet-art {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-position: center;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+/*
+  Functional game geometry remains authoritative and renders above the
+  cabinet artwork. The cabinet decorates this layout; it does not define it.
+*/
+.game-ui {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: 100%;
   display: grid;
   grid-template-columns: 1fr;
   grid-template-rows:
     64px 192px 344px 48px 80px 72px;
-  opacity: 1;
-  visibility: visible;
-  transition:
-    opacity 700ms ease,
-    visibility 0s linear 0s;
 }
 .game-presentation.is-looking-out {
   opacity: 0;
@@ -120,6 +161,25 @@ body {
   outline-offset: 3px;
 }
 /*
+  Two-second transition lock after LOOK OUT / RETURN is selected.
+  Keep the button readable, but make the temporary disabled state unmistakable
+  and suppress hover/focus emphasis until it becomes interactive again.
+*/
+.lookout-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+  filter: saturate(0.45) brightness(0.78);
+  border-color: rgba(164, 150, 118, 0.48);
+  box-shadow: none;
+}
+.lookout-button:disabled:hover,
+.lookout-button:disabled:focus-visible {
+  background: rgba(35, 18, 55, 0.72);
+  color: rgba(245, 230, 190, 0.92);
+  border-color: rgba(164, 150, 118, 0.48);
+  box-shadow: none;
+}
+/*
   LOOK OUT is active:
   RETURN uses the Quest of Fortune purple/gold visual language
   while remaining secondary to the scenery.
@@ -142,6 +202,15 @@ body {
     0 0 11px rgba(132, 71, 192, 0.45),
     inset 0 0 6px rgba(255, 220, 110, 0.16);
   opacity: 1;
+}
+.lookout-button[aria-pressed='true']:disabled,
+.lookout-button[aria-pressed='true']:disabled:hover,
+.lookout-button[aria-pressed='true']:disabled:focus-visible {
+  background: rgba(43, 31, 54, 0.78);
+  color: rgba(214, 196, 150, 0.62);
+  border-color: rgba(164, 150, 118, 0.48);
+  box-shadow: none;
+  opacity: 0.42;
 }
 /*
   After 15 seconds in LOOK OUT mode, a restrained gold highlight travels

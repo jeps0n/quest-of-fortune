@@ -15,9 +15,9 @@ async function loadGame(): Promise<void> {
     <div class="stage-viewport">
       <main class="game-stage">
         <div class="game-presentation">
-        <header class="title-zone">
-          <h1>QUEST OF FORTUNE</h1>
-        </header>
+          <div class="cabinet-art" aria-hidden="true"></div>
+          <div class="game-ui">
+        <header class="title-zone" aria-hidden="true"></header>
         <section class="jackpot-zone">
           <div class="jackpot-card jackpot-card--grand">
             <span class="jackpot-label">GRAND</span>
@@ -61,6 +61,7 @@ async function loadGame(): Promise<void> {
         <section class="control-zone">
           <button class="spin-button" disabled>SPIN</button>
         </section>
+          </div>
         </div>
         <button
           class="lookout-button"
