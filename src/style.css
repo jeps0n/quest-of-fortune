@@ -1,7 +1,6 @@
 * {
   box-sizing: border-box;
 }
-
 html,
 body {
   margin: 0;
@@ -9,11 +8,9 @@ body {
   height: 100%;
   overflow: hidden;
 }
-
 body {
   min-width: 320px;
   min-height: 100vh;
-
   /*
     The fantasy environment belongs to the browser viewport, not the
     fixed 1200 × 800 gameplay surface. The Vite base is currently
@@ -24,31 +21,22 @@ body {
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
-
   color: #f5f5f5;
-
   font-family: Arial, Helvetica, sans-serif;
 }
-
 #app {
   width: 100vw;
   height: 100vh;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   padding: 16px;
-
   overflow: hidden;
 }
-
 /*
   OPTION B FOUNDATION
-
   stage-viewport = scaled footprint in the browser
   game-stage     = fixed 1200 × 800 logical game surface
-
   Nothing inside game-stage is responsively reflowed.
   The entire cabinet scales uniformly as one object.
 */
@@ -56,106 +44,207 @@ body {
   position: relative;
   flex: 0 0 auto;
 }
-
 .game-stage {
   position: absolute;
   top: 0;
   left: 0;
-
   width: 1200px;
   height: 800px;
-
   transform-origin: top left;
-
+  background: transparent;
+  overflow: hidden;
+}
+/*
+  Everything the player considers "the slot" lives in one presentation
+  layer. LOOK OUT fades this layer as a unit while the viewport-owned
+  fantasy background remains untouched.
+*/
+.game-presentation {
+  width: 100%;
+  height: 100%;
   display: grid;
   grid-template-columns: 1fr;
   grid-template-rows:
-    64px
-    192px
-    344px
-    48px
-    80px
-    72px;
-
-  background: transparent;
-
-  border: 2px solid #777;
-
-  overflow: hidden;
+    64px 192px 344px 48px 80px 72px;
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 700ms ease,
+    visibility 0s linear 0s;
 }
-
+.game-presentation.is-looking-out {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 700ms ease,
+    visibility 0s linear 700ms;
+}
+/*
+  Deliberately small and secondary to SPIN. It is anchored to the fixed
+  1200 × 800 stage, so its position scales with the cabinet and never
+  participates in the gameplay layout.
+*/
+.lookout-button {
+  position: absolute;
+  bottom: 18px;
+  right: 24px;
+  z-index: 10;
+  min-width: 112px;
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid rgba(214, 180, 92, 0.72);
+  border-radius: 16px;
+  background: rgba(35, 18, 55, 0.72);
+  color: rgba(245, 230, 190, 0.92);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    color 160ms ease,
+    opacity 160ms ease;
+}
+.lookout-button:hover,
+.lookout-button:focus-visible {
+  background: rgba(52, 27, 78, 0.9);
+  border-color: rgba(232, 199, 108, 0.95);
+}
+.lookout-button:focus-visible {
+  outline: 2px solid rgba(245, 230, 190, 0.9);
+  outline-offset: 3px;
+}
+/*
+  LOOK OUT is active:
+  RETURN uses the Quest of Fortune purple/gold visual language
+  while remaining secondary to the scenery.
+*/
+.lookout-button[aria-pressed='true'] {
+  background: rgba(55, 24, 88, 0.92);
+  color: #f6d77a;
+  border: 1px solid rgba(226, 185, 70, 0.9);
+  box-shadow:
+    0 0 8px rgba(116, 61, 170, 0.35),
+    inset 0 0 5px rgba(255, 214, 92, 0.12);
+  opacity: 0.9;
+}
+.lookout-button[aria-pressed='true']:hover,
+.lookout-button[aria-pressed='true']:focus-visible {
+  background: rgba(70, 31, 108, 0.96);
+  color: #ffe39a;
+  border-color: rgba(242, 204, 91, 1);
+  box-shadow:
+    0 0 11px rgba(132, 71, 192, 0.45),
+    inset 0 0 6px rgba(255, 220, 110, 0.16);
+  opacity: 1;
+}
+/*
+  After 15 seconds in LOOK OUT mode, a restrained gold highlight travels
+  around RETURN's perimeter. The button itself stays still and does not flash.
+*/
+@property --return-highlight-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+.lookout-button::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  padding: 2px;
+  pointer-events: none;
+  opacity: 0;
+  background: conic-gradient(from var(--return-highlight-angle),
+      transparent 0deg 305deg,
+      rgba(255, 225, 135, 0.18) 315deg,
+      rgba(255, 218, 105, 0.95) 334deg,
+      rgba(255, 238, 174, 1) 342deg,
+      rgba(255, 218, 105, 0.95) 350deg,
+      transparent 360deg);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+.lookout-button[aria-pressed='true'].is-reminding::after {
+  opacity: 1;
+  animation: return-perimeter-highlight 2.8s linear infinite;
+}
+@keyframes return-perimeter-highlight {
+  to {
+    --return-highlight-angle: 360deg;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .game-presentation {
+    transition: none;
+  }
+  .lookout-button[aria-pressed='true'].is-reminding::after {
+    animation: none;
+    opacity: 0;
+  }
+}
 /* ---------------- TITLE ---------------- */
-
 .title-zone {
   display: flex;
   align-items: center;
   justify-content: center;
-
   border-bottom: 1px solid #555;
 }
-
 .title-zone h1 {
   margin: 0;
-
   font-size: 42px;
   line-height: 1;
   letter-spacing: 0.08em;
-
   white-space: nowrap;
 }
-
 /* ---------------- JACKPOTS ---------------- */
-
 .jackpot-zone {
   display: grid;
-
   grid-template-columns: 1fr 1.7fr 1fr;
   grid-template-rows: 1fr 0.85fr;
-
   grid-template-areas:
     ". grand ."
     "mini major minor";
-
   gap: 12px 26px;
-
   padding: 10px 84px;
-
   overflow: hidden;
 }
-
 .jackpot-card {
   min-width: 0;
   min-height: 0;
-
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-
   background: rgba(24, 10, 42, 0.72);
   border: 2px solid #666;
-
   overflow: hidden;
 }
-
 .jackpot-label,
 .jackpot-card strong {
   white-space: nowrap;
 }
-
 .jackpot-label {
   font-size: 17px;
   line-height: 1;
   letter-spacing: 0.08em;
 }
-
 .jackpot-card strong {
   margin-top: 6px;
-
   font-size: 24px;
   line-height: 1;
 }
-
 /*
   Blocking colors only.
   Final jackpot artwork comes later.
@@ -164,144 +253,102 @@ body {
   grid-area: grand;
   border-color: #8c5ccf;
 }
-
 .jackpot-card--major {
   grid-area: major;
   border-color: #4b7dcc;
 }
-
 .jackpot-card--mini {
   grid-area: mini;
   border-color: #4f9c5f;
 }
-
 .jackpot-card--minor {
   grid-area: minor;
   border-color: #b65353;
 }
-
 .jackpot-card--grand strong {
   font-size: 34px;
 }
-
 .jackpot-card--major strong {
   font-size: 29px;
 }
-
 /* ---------------- REELS ---------------- */
-
 .reel-zone {
   padding: 10px 84px;
 }
-
 .reel-grid {
   width: 100%;
   height: 100%;
-
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   grid-template-rows: repeat(4, 1fr);
-
   gap: 6px;
-
   padding: 8px;
-
   background: rgba(8, 3, 20, 0.48);
   border: 3px solid rgba(215, 177, 65, 0.75);
-
   overflow: hidden;
 }
-
 .symbol-cell {
   min-width: 0;
   min-height: 0;
-
   background: rgba(35, 18, 55, 0.38);
   border: 1px solid rgba(212, 175, 55, 0.42);
 }
-
 /* ---------------- MESSAGE ---------------- */
-
 .message-zone {
   display: flex;
   align-items: center;
   justify-content: center;
-
   margin: 0 84px;
-
   border: 1px solid #555;
-
   font-size: 17px;
   line-height: 1;
-
   white-space: nowrap;
   overflow: hidden;
 }
-
 /* ---------------- HUD ---------------- */
-
 .hud-zone {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-
   gap: 48px;
   padding: 8px 144px;
 }
-
 .hud-item {
   min-width: 0;
   min-height: 0;
-
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-
   border: 1px solid #555;
-
   overflow: hidden;
 }
-
 .hud-item span {
   font-size: 14px;
   line-height: 1;
-
   white-space: nowrap;
 }
-
 .hud-item strong {
   margin-top: 6px;
-
   font-size: 21px;
   line-height: 1;
-
   white-space: nowrap;
 }
-
 /* ---------------- CONTROLS ---------------- */
-
 .control-zone {
   display: flex;
   align-items: center;
   justify-content: center;
 }
-
 .spin-button {
   width: 264px;
   height: 47px;
-
   padding: 0 12px;
-
   font-size: 24px;
   line-height: 1;
   font-weight: 700;
-
   border: 2px solid #777;
-
   background: #30303a;
   color: #999;
-
   white-space: nowrap;
-
   cursor: not-allowed;
 }
