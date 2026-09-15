@@ -14,7 +14,17 @@ body {
   min-width: 320px;
   min-height: 100vh;
 
-  background: #101014;
+  /*
+    The fantasy environment belongs to the browser viewport, not the
+    fixed 1200 × 800 gameplay surface. The Vite base is currently
+    /quest-of-fortune/, so this path works in local dev and GitHub Pages.
+  */
+  background-color: #101014;
+  background-image: url('/quest-of-fortune/assets/backgrounds/quest-background.png');
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+
   color: #f5f5f5;
 
   font-family: Arial, Helvetica, sans-serif;
@@ -67,7 +77,8 @@ body {
     80px
     72px;
 
-  background: #1b1b22;
+  background: transparent;
+
   border: 2px solid #777;
 
   overflow: hidden;
@@ -121,7 +132,7 @@ body {
   align-items: center;
   justify-content: center;
 
-  background: #262630;
+  background: rgba(24, 10, 42, 0.72);
   border: 2px solid #666;
 
   overflow: hidden;
@@ -195,8 +206,8 @@ body {
 
   padding: 8px;
 
-  background: #0c0c10;
-  border: 3px solid #777;
+  background: rgba(8, 3, 20, 0.48);
+  border: 3px solid rgba(215, 177, 65, 0.75);
 
   overflow: hidden;
 }
@@ -205,8 +216,8 @@ body {
   min-width: 0;
   min-height: 0;
 
-  background: #292934;
-  border: 1px solid #555;
+  background: rgba(35, 18, 55, 0.38);
+  border: 1px solid rgba(212, 175, 55, 0.42);
 }
 
 /* ---------------- MESSAGE ---------------- */
@@ -293,15 +304,4 @@ body {
   white-space: nowrap;
 
   cursor: not-allowed;
-}
-
-/* ---------------- VERY SMALL VIEWPORT ---------------- */
-
-/*
-  At extremely small dimensions we preserve the fixed stage model.
-  The cabinet still scales uniformly; this class is only a hook for
-  future UX treatment if we decide to show a small-screen notice.
-*/
-.viewport-too-small #app {
-  background: #101014;
 }

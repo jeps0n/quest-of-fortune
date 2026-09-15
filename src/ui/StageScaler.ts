@@ -1,7 +1,6 @@
 const STAGE_WIDTH = 1200
 const STAGE_HEIGHT = 800
 const VIEWPORT_PADDING = 16
-const MIN_SUPPORTED_SCALE = 0.5
 
 interface StageScalerElements {
   viewport: HTMLElement
@@ -33,11 +32,6 @@ export function createStageScaler({
 
     viewport.style.width = `${STAGE_WIDTH * scale}px`
     viewport.style.height = `${STAGE_HEIGHT * scale}px`
-
-    document.body.classList.toggle(
-      'viewport-too-small',
-      scale < MIN_SUPPORTED_SCALE,
-    )
   }
 
   updateScale()
