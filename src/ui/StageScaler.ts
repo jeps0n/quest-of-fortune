@@ -1,5 +1,4 @@
-const STAGE_WIDTH = 1200
-const STAGE_HEIGHT = 800
+import { QUEST_LAYOUT } from '../config/QuestLayout'
 const VIEWPORT_PADDING = 16
 interface StageScalerElements {
   viewport: HTMLElement
@@ -19,13 +18,13 @@ export function createStageScaler({
       window.innerHeight - VIEWPORT_PADDING * 2,
     )
     const scale = Math.min(
-      availableWidth / STAGE_WIDTH,
-      availableHeight / STAGE_HEIGHT,
+      availableWidth / QUEST_LAYOUT.stage.width,
+      availableHeight / QUEST_LAYOUT.stage.height,
       1,
     )
     stage.style.transform = `scale(${scale})`
-    viewport.style.width = `${STAGE_WIDTH * scale}px`
-    viewport.style.height = `${STAGE_HEIGHT * scale}px`
+    viewport.style.width = `${QUEST_LAYOUT.stage.width * scale}px`
+    viewport.style.height = `${QUEST_LAYOUT.stage.height * scale}px`
   }
   updateScale()
   window.addEventListener('resize', updateScale)

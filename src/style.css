@@ -73,20 +73,16 @@ body {
   position: absolute;
   inset: 0;
   z-index: 0;
-
   background-image: url('/quest-of-fortune/assets/cabinet/quest-cabinet.png');
   background-position: center;
   background-size: 100% 100%;
   background-repeat: no-repeat;
-
   pointer-events: none;
 }
-
 /*
   Decorative cabinet layer. It sits above the viewport background but below
   all functional game UI. Keep it inside .game-presentation so LOOK OUT
   automatically fades the cabinet and gameplay together.
-
   When the cabinet asset is ready, set background-image here.
 */
 .cabinet-art {
@@ -98,7 +94,6 @@ body {
   background-size: 100% 100%;
   background-repeat: no-repeat;
 }
-
 /*
   Functional game geometry remains authoritative and renders above the
   cabinet artwork. The cabinet decorates this layout; it does not define it.
@@ -120,148 +115,6 @@ body {
   transition:
     opacity 700ms ease,
     visibility 0s linear 700ms;
-}
-/*
-  Deliberately small and secondary to SPIN. It is anchored to the fixed
-  1200 × 800 stage, so its position scales with the cabinet and never
-  participates in the gameplay layout.
-*/
-.lookout-button {
-  position: absolute;
-  bottom: 18px;
-  right: 24px;
-  z-index: 10;
-  min-width: 112px;
-  height: 32px;
-  padding: 0 14px;
-  border: 1px solid rgba(214, 180, 92, 0.72);
-  border-radius: 16px;
-  background: rgba(35, 18, 55, 0.72);
-  color: rgba(245, 230, 190, 0.92);
-  font: inherit;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: 0.12em;
-  cursor: pointer;
-  transition:
-    background-color 160ms ease,
-    border-color 160ms ease,
-    box-shadow 160ms ease,
-    color 160ms ease,
-    opacity 160ms ease;
-}
-.lookout-button:hover,
-.lookout-button:focus-visible {
-  background: rgba(52, 27, 78, 0.9);
-  border-color: rgba(232, 199, 108, 0.95);
-}
-.lookout-button:focus-visible {
-  outline: 2px solid rgba(245, 230, 190, 0.9);
-  outline-offset: 3px;
-}
-/*
-  Two-second transition lock after LOOK OUT / RETURN is selected.
-  Keep the button readable, but make the temporary disabled state unmistakable
-  and suppress hover/focus emphasis until it becomes interactive again.
-*/
-.lookout-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.42;
-  filter: saturate(0.45) brightness(0.78);
-  border-color: rgba(164, 150, 118, 0.48);
-  box-shadow: none;
-}
-.lookout-button:disabled:hover,
-.lookout-button:disabled:focus-visible {
-  background: rgba(35, 18, 55, 0.72);
-  color: rgba(245, 230, 190, 0.92);
-  border-color: rgba(164, 150, 118, 0.48);
-  box-shadow: none;
-}
-/*
-  LOOK OUT is active:
-  RETURN uses the Quest of Fortune purple/gold visual language
-  while remaining secondary to the scenery.
-*/
-.lookout-button[aria-pressed='true'] {
-  background: rgba(55, 24, 88, 0.92);
-  color: #f6d77a;
-  border: 1px solid rgba(226, 185, 70, 0.9);
-  box-shadow:
-    0 0 8px rgba(116, 61, 170, 0.35),
-    inset 0 0 5px rgba(255, 214, 92, 0.12);
-  opacity: 0.9;
-}
-.lookout-button[aria-pressed='true']:hover,
-.lookout-button[aria-pressed='true']:focus-visible {
-  background: rgba(70, 31, 108, 0.96);
-  color: #ffe39a;
-  border-color: rgba(242, 204, 91, 1);
-  box-shadow:
-    0 0 11px rgba(132, 71, 192, 0.45),
-    inset 0 0 6px rgba(255, 220, 110, 0.16);
-  opacity: 1;
-}
-.lookout-button[aria-pressed='true']:disabled,
-.lookout-button[aria-pressed='true']:disabled:hover,
-.lookout-button[aria-pressed='true']:disabled:focus-visible {
-  background: rgba(43, 31, 54, 0.78);
-  color: rgba(214, 196, 150, 0.62);
-  border-color: rgba(164, 150, 118, 0.48);
-  box-shadow: none;
-  opacity: 0.42;
-}
-/*
-  After 15 seconds in LOOK OUT mode, a restrained gold highlight travels
-  around RETURN's perimeter. The button itself stays still and does not flash.
-*/
-@property --return-highlight-angle {
-  syntax: '<angle>';
-  initial-value: 0deg;
-  inherits: false;
-}
-.lookout-button::after {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: inherit;
-  padding: 2px;
-  pointer-events: none;
-  opacity: 0;
-  background: conic-gradient(from var(--return-highlight-angle),
-      transparent 0deg 305deg,
-      rgba(255, 225, 135, 0.18) 315deg,
-      rgba(255, 218, 105, 0.95) 334deg,
-      rgba(255, 238, 174, 1) 342deg,
-      rgba(255, 218, 105, 0.95) 350deg,
-      transparent 360deg);
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask-composite: exclude;
-}
-.lookout-button[aria-pressed='true'].is-reminding::after {
-  opacity: 1;
-  animation: return-perimeter-highlight 2.8s linear infinite;
-}
-@keyframes return-perimeter-highlight {
-  to {
-    --return-highlight-angle: 360deg;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .game-presentation {
-    transition: none;
-  }
-  .lookout-button[aria-pressed='true'].is-reminding::after {
-    animation: none;
-    opacity: 0;
-  }
 }
 /* ---------------- TITLE ---------------- */
 .title-zone {
@@ -420,4 +273,35 @@ body {
   color: #999;
   white-space: nowrap;
   cursor: not-allowed;
+}
+/* ---------------- PIXI FOUNDATION ---------------- */
+/*
+  Transparent full-stage renderer. It shares the locked 1200 × 800 logical
+  coordinate system and does not participate in the CSS grid layout.
+  Pixi owns stage-level game controls and future animated presentation layers.
+*/
+.pixi-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  width: 1200px;
+  height: 800px;
+  pointer-events: auto;
+}
+.pixi-canvas {
+  display: block;
+  width: 1200px;
+  height: 800px;
+}
+/* ---------------- PIXI CONTROLS ---------------- */
+/*
+  LOOK OUT / RETURN is rendered by Pixi on the full-stage controls layer.
+  Its locked position is defined by QUEST_LAYOUT and does not participate
+  in the DOM gameplay grid.
+*/
+/* ---------------- ACCESSIBILITY ---------------- */
+@media (prefers-reduced-motion: reduce) {
+  .game-presentation {
+    transition: none;
+  }
 }
