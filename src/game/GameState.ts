@@ -1,5 +1,4 @@
 export type GamePhase = 'idle' | 'spinning' | 'win' | 'contributing'
-
 export class GameState {
   private phase: GamePhase = 'idle'
   get current(): GamePhase { return this.phase }

@@ -14,9 +14,9 @@ export class ReelSymbolPool {
   }
   get pitch(): number { return this.cellHeight + this.gap }
   layout(): void { this.symbols.forEach((symbol, i) => symbol.view.position.set(symbol.view.pivot.x, i * this.pitch + symbol.view.pivot.y)) }
-  recycleOne(): void {
+  recycleOne(nextId?: SymbolId): void {
     const last = this.symbols.pop(); if (!last) return
-    last.setSymbol(SYMBOL_IDS[Math.floor(Math.random() * SYMBOL_IDS.length)])
+    last.setSymbol(nextId ?? SYMBOL_IDS[Math.floor(Math.random() * SYMBOL_IDS.length)])
     this.symbols.unshift(last); this.view.setChildIndex(last.view, 0); this.layout()
   }
   applyVisible(ids: readonly SymbolId[], offset = 1): void { ids.forEach((id, row) => this.symbols[row + offset]?.setSymbol(id)) }

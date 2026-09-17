@@ -156,7 +156,6 @@ export const REEL_STRIPS: readonly (readonly SymbolId[])[] = [
     'CHEST', 'SCROLL', 'SCROLL', 'ARCHER', 'SCROLL', 'SCROLL', 'GEM', 'RING',
   ],
 ] as const
-
 export function createSpinResult(reelCount = 5, rows = 4, random = Math.random): SpinResult {
   const reels = Array.from({ length: reelCount }, (_, reelIndex) => {
     const strip = REEL_STRIPS[reelIndex % REEL_STRIPS.length]

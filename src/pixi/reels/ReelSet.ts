@@ -2,7 +2,7 @@ import { Container } from 'pixi.js'
 import { QUEST_LAYOUT } from '../../config/QuestLayout'
 import type { AudioManager } from '../../audio/AudioManager'
 import type { SpinResult } from '../../game/math/SpinResult'
-import type { WinPosition } from '../../game/math/WinEvaluator'
+import type { Win } from '../../game/math/WinEvaluator'
 import { Reel } from './Reel'
 import { ReelSequencer } from './ReelSequencer'
 export class ReelSet {
@@ -19,7 +19,8 @@ export class ReelSet {
     this.reels.forEach((reel, reelIndex) => reel.pool.applyVisible(result.reels[reelIndex] ?? []))
   }
   spin(result: SpinResult): Promise<void> { return this.sequencer.spin(result) }
-  async presentWins(positions: WinPosition[]): Promise<void> {
+  async presentWins(wins: readonly Win[]): Promise<void> {
+    const positions = wins.flatMap((win) => win.positions)
     const keys = new Set(positions.map((p) => `${p.reel}:${p.row}`)); const tasks: Promise<void>[] = []
     this.reels.forEach((reel, reelIndex) => reel.visibleSymbols().forEach((symbol, row) => tasks.push(symbol.animator.play(keys.has(`${reelIndex}:${row}`) ? 'win' : 'dim'))))
     await Promise.all(tasks)

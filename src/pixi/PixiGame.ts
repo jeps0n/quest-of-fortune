@@ -11,11 +11,12 @@ import { createSpinButton } from './controls/SpinButton'
 import { ReelSet } from './reels/ReelSet'
 import { ContributeAnimation } from './jackpots/ContributeAnimation'
 import { JackpotCounter } from './jackpots/JackpotCounter'
+import { WinPresentation } from './wins/WinPresentation'
 export interface PixiGame { app: Application; layers: GameLayers; destroy: () => void }
-interface CreatePixiGameOptions { host: HTMLElement; presentation: HTMLElement; jackpots: JackpotState; majorElement: HTMLElement; grandElement: HTMLElement; messageElement: HTMLElement; winElement: HTMLElement }
+interface CreatePixiGameOptions { host: HTMLElement; presentation: HTMLElement; jackpots: JackpotState; majorElement: HTMLElement; grandElement: HTMLElement; messageElement: HTMLElement; winElement: HTMLElement; balanceElement: HTMLElement }
 export async function createPixiGame(options: CreatePixiGameOptions): Promise<PixiGame> {
   const app = new Application(); await app.init({ width: QUEST_LAYOUT.stage.width, height: QUEST_LAYOUT.stage.height, backgroundAlpha: 0, antialias: true, resolution: window.devicePixelRatio || 1, autoDensity: true }); app.canvas.classList.add('pixi-canvas'); options.host.appendChild(app.canvas)
-  const layers = createGameLayers(app.stage); const audio = new AudioManager(); const reels = new ReelSet(audio); const contribute = new ContributeAnimation(audio); const majorCounter = new JackpotCounter(options.majorElement); const grandCounter = new JackpotCounter(options.grandElement)
+  const layers = createGameLayers(app.stage); const audio = new AudioManager(); const reels = new ReelSet(audio); const contribute = new ContributeAnimation(audio); const majorCounter = new JackpotCounter(options.majorElement); const grandCounter = new JackpotCounter(options.grandElement); const winPresentation = new WinPresentation()
   let game: Game | undefined; const spinButton = createSpinButton(() => { void game?.spin() }); const lookOutButton = createLookOutButton({
     onLookingOutChange: (active) => {
       // LOOK OUT must treat the cabinet and every gameplay presentation layer
@@ -27,7 +28,6 @@ export async function createPixiGame(options: CreatePixiGameOptions): Promise<Pi
         gsap.killTweensOf(layer)
         gsap.to(layer, { alpha, duration: 0.7, ease: 'power1.inOut' })
       }
-
       // SPIN belongs visually to the cabinet, so it must fade with the
       // cabinet while LOOK OUT / RETURN stays available on the controls layer.
       gsap.killTweensOf(spinButton.view)
@@ -36,7 +36,7 @@ export async function createPixiGame(options: CreatePixiGameOptions): Promise<Pi
     },
   })
   reels.applyVisible(createSpinResult())
-  layers.reels.addChild(reels.view); layers.cabinetFx.addChild(contribute.view); layers.controls.addChild(spinButton.view, lookOutButton.view)
-  game = new Game(reels, spinButton, contribute, majorCounter, grandCounter, options.jackpots, { message: options.messageElement, win: options.winElement }, audio)
-  return { app, layers, destroy: () => { game?.destroy(); reels.destroy(); contribute.destroy(); spinButton.destroy(); lookOutButton.destroy(); app.destroy(true, { children: true }) } }
+  layers.reels.addChild(reels.view); layers.wins.addChild(winPresentation.view); layers.cabinetFx.addChild(contribute.view); layers.controls.addChild(spinButton.view, lookOutButton.view)
+  game = new Game(reels, spinButton, contribute, majorCounter, grandCounter, winPresentation, options.jackpots, { message: options.messageElement, win: options.winElement, balance: options.balanceElement }, audio)
+  return { app, layers, destroy: () => { game?.destroy(); reels.destroy(); winPresentation.destroy(); contribute.destroy(); spinButton.destroy(); lookOutButton.destroy(); app.destroy(true, { children: true }) } }
 }

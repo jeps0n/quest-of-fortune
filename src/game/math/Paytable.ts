@@ -1,5 +1,4 @@
 import type { SymbolId } from './SpinResult'
-
 /*
  * Direct-dollar awards for a fixed $1 total spin.
  * These are NOT line-bet multipliers: a listed $1.25 award pays $1.25.
@@ -13,7 +12,6 @@ export const PAYTABLE: Record<SymbolId, Record<number, number>> = {
   CHEST:  { 3: 2.00, 4: 3.25, 5: 5.75 },
   GEM:    { 3: 2.25, 4: 4.25, 5: 7.00 },
   CROWN:  { 3: 3.00, 4: 5.25, 5: 8.50 },
-
   ARCHER: { 3: 4.50, 4: 7.00 },
   KNIGHT: { 3: 6.00, 4: 9.00 },
   MAGE:   { 3: 8.00, 4: 11.50 },
