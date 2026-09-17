@@ -1,29 +1,14 @@
 import { supabase } from '../lib/supabase'
-
-export interface JackpotState {
-  majorValue: string | number
-  grandValue: string | number
-}
-
-interface JackpotStateRow {
-  major_value: string | number
-  grand_value: string | number
-}
-
+export interface JackpotState { majorValue: number; grandValue: number }
+interface JackpotStateRow { major_value: string | number; grand_value: string | number }
+const asNumber = (value: string | number): number => Number(value) || 0
 export async function loadJackpots(): Promise<JackpotState | null> {
-  const { data, error } = await supabase
-    .from('jackpot_state')
-    .select('major_value, grand_value')
-    .eq('id', 1)
-    .single<JackpotStateRow>()
-
-  if (error) {
-    console.error('Failed to load jackpots:', error)
-    return null
-  }
-
-  return {
-    majorValue: data.major_value,
-    grandValue: data.grand_value,
-  }
+  const { data, error } = await supabase.from('jackpot_state').select('major_value, grand_value').eq('id', 1).single<JackpotStateRow>()
+  if (error) { console.error('Failed to load jackpots:', error); return null }
+  return { majorValue: asNumber(data.major_value), grandValue: asNumber(data.grand_value) }
+}
+export async function persistJackpots(state: JackpotState): Promise<boolean> {
+  const { error } = await supabase.from('jackpot_state').update({ major_value: state.majorValue, grand_value: state.grandValue }).eq('id', 1)
+  if (error) { console.error('Failed to persist jackpots:', error); return false }
+  return true
 }

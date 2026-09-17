@@ -305,3 +305,6 @@ body {
     transition: none;
   }
 }
+/* Pixi owns reel symbols and SPIN presentation; DOM remains geometry-only. */
+.reel-grid { opacity: 0; }
+.spin-button { visibility: hidden; }
