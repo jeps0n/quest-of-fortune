@@ -1,9 +1,7 @@
 import { Container, Graphics, Text } from 'pixi.js'
 import { gsap } from 'gsap'
 import { QUEST_LAYOUT } from '../../config/QuestLayout'
-
 export interface SpinButton { view: Container; setEnabled: (enabled: boolean) => void; destroy: () => void }
-
 export function createSpinButton(onSpin: () => void): SpinButton {
   const l = QUEST_LAYOUT.spin
   const view = new Container({ label: 'spin-button' })
@@ -25,12 +23,10 @@ export function createSpinButton(onSpin: () => void): SpinButton {
   })
   let enabled = true
   let hovered = false
-
   view.position.set(l.x, l.y)
   label.anchor.set(0.5)
   label.position.set(l.width / 2, l.height / 2 - 1)
   view.addChild(shadow, rim, face, shine, label)
-
   const draw = (): void => {
     const active = enabled
     shadow.clear().roundRect(3, 5, l.width - 6, l.height - 5, 15).fill({ color: 0x050208, alpha: 0.72 })
@@ -44,14 +40,12 @@ export function createSpinButton(onSpin: () => void): SpinButton {
       .fill({ color: 0xffffff, alpha: active ? (hovered ? 0.12 : 0.075) : 0.02 })
     label.alpha = active ? 1 : 0.4
   }
-
   const setEnabled = (next: boolean): void => {
     enabled = next
     view.eventMode = next ? 'static' : 'none'
     view.cursor = next ? 'pointer' : 'default'
     draw()
   }
-
   view.hitArea = { contains: (x: number, y: number) => x >= 0 && x <= l.width && y >= 0 && y <= l.height }
   view.on('pointerover', () => {
     hovered = true
@@ -70,7 +64,6 @@ export function createSpinButton(onSpin: () => void): SpinButton {
     gsap.fromTo(face.scale, { x: 0.985, y: 0.9 }, { x: 1, y: 1, duration: 0.18, ease: 'back.out(2)' })
     onSpin()
   })
-
   setEnabled(true)
   return {
     view,

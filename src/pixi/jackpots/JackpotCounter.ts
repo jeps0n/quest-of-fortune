@@ -1,10 +1,7 @@
 import { gsap } from 'gsap'
-
 export class JackpotCounter {
   private element: HTMLElement
-
   constructor(element: HTMLElement) { this.element = element }
-
   animate(from: number, to: number): Promise<void> {
     const state = { value: from }
     gsap.killTweensOf(this.element)

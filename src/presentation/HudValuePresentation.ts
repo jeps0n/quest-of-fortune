@@ -1,11 +1,8 @@
 import { gsap } from 'gsap'
-
 const money = (value: number): string => `$${value.toFixed(2)}`
-
 export class HudValuePresentation {
   private readonly balanceElement: HTMLElement
   private readonly winElement: HTMLElement
-
   constructor(
     balanceElement: HTMLElement,
     winElement: HTMLElement,
@@ -13,14 +10,12 @@ export class HudValuePresentation {
     this.balanceElement = balanceElement
     this.winElement = winElement
   }
-
   setBalance(
     value: number,
     emphasis: 'wager' | 'payout' | 'none' = 'none',
   ): void {
     this.balanceElement.textContent = money(value)
     if (emphasis === 'none') return
-
     gsap.killTweensOf(this.balanceElement)
     gsap.fromTo(
       this.balanceElement,
@@ -37,7 +32,6 @@ export class HudValuePresentation {
       },
     )
   }
-
   resetWin(): void {
     gsap.killTweensOf(this.winElement)
     gsap.set(this.winElement, {
@@ -46,14 +40,10 @@ export class HudValuePresentation {
     })
     this.winElement.textContent = '$0.00'
   }
-
   showWin(value: number): void {
     gsap.killTweensOf(this.winElement)
-
     const counter = { value: 0 }
-
     this.winElement.textContent = '$0.00'
-
     gsap.fromTo(
       this.winElement,
       {
@@ -68,7 +58,6 @@ export class HudValuePresentation {
         overwrite: true,
       },
     )
-
     gsap.to(counter, {
       value,
       duration: 0.42,
@@ -81,7 +70,6 @@ export class HudValuePresentation {
       },
     })
   }
-
   destroy(): void {
     gsap.killTweensOf(this.balanceElement)
     gsap.killTweensOf(this.winElement)

@@ -15,7 +15,6 @@ const CHARACTER_LOOK: Record<
 // Shared alternate-screen art scale.
 // Positioning intentionally uses vanilla Pixi top-left local coordinates for this test.
 const STAGE_ART_ZOOM = .66
-
 type CharacterMotion = {
   stageOffsetX: number
   stageOffsetY: number
@@ -29,7 +28,6 @@ type CharacterMotion = {
   payoutOffsetY: number
   hold: number
 }
-
 /**
  * Motion identity only. Final framing, reel geometry, payout timing, and math
  * remain shared so character flavor never leaks into game behavior.
@@ -253,7 +251,6 @@ export class CharacterWinPresentation {
     const baseScale = this.getBackdropBaseScale()
     const baseX = this.backdrop.x
     const baseY = this.backdrop.y
-
     this.view.alpha = 0
     this.backdrop.alpha = 0
     this.backdrop.position.set(
@@ -476,18 +473,14 @@ export class CharacterWinPresentation {
     const finalScale = STAGE_ART_ZOOM
     const renderedWidth = textureWidth * finalScale
     const renderedHeight = textureHeight * finalScale
-
     const centeredX = -(renderedWidth - l.width) / 2
     const centeredY = -(renderedHeight - l.height) / 2
-
     const stageCenterX = QUEST_LAYOUT.stage.width / 2
     const stageCenterY = QUEST_LAYOUT.stage.height / 2
     const screenCenterX = l.x + l.width / 2
     const screenCenterY = l.y + l.height / 2
-
     const stageCenterCompensationX = screenCenterX - stageCenterX
     const stageCenterCompensationY = screenCenterY - stageCenterY
-
     this.backdrop.scale.set(finalScale)
     this.backdrop.position.set(
       centeredX + stageCenterCompensationX,
