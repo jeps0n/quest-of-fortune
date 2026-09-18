@@ -86,20 +86,14 @@ export class PresentationDirector {
           this.wins.fadeTo(1, 0.44),
         ])
       } else if (presentation.kind === 'normal') {
-        // NORMAL wins also get a brief stage beat, but never the character
-        // takeover. This establishes spectacle without spending jackpot scale.
+        // NORMAL wins keep the authoritative reel result fully visible while
+        // the payline gets its brief emphasis. Stage fading is reserved for
+        // presentations that actually replace the reel viewport.
         await this.reels.presentWins(
           evaluation.wins,
         )
         await this.wait(0.24)
-        await this.reels.fadeForStage(
-          0.20,
-          0.20,
-        )
         await this.wins.stagePulse()
-        await this.reels.restoreFromStage(
-          0.26,
-        )
       } else {
         await this.reels.presentWins(
           evaluation.wins,
