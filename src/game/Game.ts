@@ -7,7 +7,7 @@ import type { ReelSet } from '../pixi/reels/ReelSet'
 import type { SpinButton } from '../pixi/controls/SpinButton'
 import type { ContributeAnimation } from '../pixi/jackpots/ContributeAnimation'
 import type { JackpotCounter } from '../pixi/jackpots/JackpotCounter'
-import type { WinPresentation } from '../pixi/wins/WinPresentation'
+import type { PresentationDirector } from '../presentation/PresentationDirector'
 interface GameHud { message: HTMLElement; win: HTMLElement; balance: HTMLElement }
 const BET = 1
 const MINI_AWARD = 20
@@ -26,19 +26,19 @@ export class Game {
   private contributeFx: ContributeAnimation
   private majorCounter: JackpotCounter
   private grandCounter: JackpotCounter
-  private winPresentation: WinPresentation
+  private presentation: PresentationDirector
   private hud: GameHud
   private audio: AudioManager
   private balance = STARTING_BALANCE
-  constructor(reels: ReelSet, spinButton: SpinButton, contributeFx: ContributeAnimation, majorCounter: JackpotCounter, grandCounter: JackpotCounter, winPresentation: WinPresentation, jackpots: JackpotState, hud: GameHud, audio: AudioManager) {
-    this.reels = reels; this.spinButton = spinButton; this.contributeFx = contributeFx; this.majorCounter = majorCounter; this.grandCounter = grandCounter; this.winPresentation = winPresentation; this.jackpots = jackpots; this.hud = hud; this.audio = audio
+  constructor(reels: ReelSet, spinButton: SpinButton, contributeFx: ContributeAnimation, majorCounter: JackpotCounter, grandCounter: JackpotCounter, presentation: PresentationDirector, jackpots: JackpotState, hud: GameHud, audio: AudioManager) {
+    this.reels = reels; this.spinButton = spinButton; this.contributeFx = contributeFx; this.majorCounter = majorCounter; this.grandCounter = grandCounter; this.presentation = presentation; this.jackpots = jackpots; this.hud = hud; this.audio = audio
     this.hud.balance.textContent = money(this.balance)
   }
   async spin(): Promise<void> {
     if (!this.state.canSpin) return
     this.state.set('spinning')
     this.spinButton.setEnabled(false)
-    this.winPresentation.clear()
+    this.presentation.clear()
     this.hud.message.textContent = 'SPINNING…'
     this.hud.win.textContent = '$0.00'
     this.balance = Number((this.balance - BET).toFixed(2))
@@ -55,9 +55,8 @@ export class Game {
       this.balance = Number((this.balance + evaluation.totalPayout).toFixed(2))
       this.hud.balance.textContent = money(this.balance)
       this.hud.win.textContent = money(evaluation.totalPayout)
-      this.winPresentation.show(evaluation.wins)
-      await this.reels.presentWins(evaluation.wins)
     }
+    await this.presentation.present(evaluation)
     await this.settleContribution(contribution.major, contribution.grand)
     this.hud.message.textContent = this.buildSpinMessage(evaluation, contribution.major, contribution.grand, jackpotLabels)
     this.finish()
@@ -145,6 +144,6 @@ export class Game {
   }
   private finish(): void { this.state.set('idle'); this.spinButton.setEnabled(true) }
   destroy(): void {
-    void this.audio
+    this.audio.destroy()
   }
 }

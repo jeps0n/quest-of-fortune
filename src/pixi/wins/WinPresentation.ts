@@ -32,8 +32,27 @@ export class WinPresentation {
     this.view.alpha = 0
     gsap.to(this.view, { alpha: 1, duration: 0.16, ease: 'power2.out' })
   }
+  stagePulse(): Promise<void> {
+    gsap.killTweensOf(this.view)
+    return new Promise((resolve) => {
+      const timeline = gsap.timeline({ onComplete: resolve })
+      timeline
+        .fromTo(this.view, { alpha: 0.72 }, { alpha: 1, duration: 0.16, ease: 'power2.out' })
+        .to(this.view, { alpha: 0.82, duration: 0.22, ease: 'power1.inOut' })
+        .to(this.view, { alpha: 1, duration: 0.22, ease: 'power2.out' })
+        .to({}, { duration: 0.12 })
+    })
+  }
+  fadeTo(alpha: number, duration = 0.18): Promise<void> {
+    gsap.killTweensOf(this.view)
+    return new Promise((resolve) => {
+      gsap.to(this.view, { alpha, duration, ease: 'power1.inOut', onComplete: resolve })
+    })
+  }
   clear(): void {
     gsap.killTweensOf(this.view)
+    gsap.killTweensOf(this.view.scale)
+    this.view.scale.set(1)
     this.graphics.clear()
     this.badge.text = ''
     this.view.alpha = 1
@@ -60,6 +79,14 @@ export class WinPresentation {
     this.strokePath(winningPoints, color, 0.34, 7)
     this.strokePath(winningPoints, color, 1, 2.5)
     this.strokePath(winningPoints, 0xfff7da, 0.78, 1)
+    // Small end caps give ordinary wins a deliberate start/finish without
+    // enclosing symbols or competing with HIGH character treatments.
+    if (winningPoints.length > 1) {
+      const first = winningPoints[0]
+      const last = winningPoints[winningPoints.length - 1]
+      this.graphics.circle(first.x, first.y, 7).stroke({ color, alpha: 0.34, width: 1.5 })
+      this.graphics.circle(last.x, last.y, 7).stroke({ color, alpha: 0.34, width: 1.5 })
+    }
     winningPoints.forEach((point) => {
       this.graphics.circle(point.x, point.y, 4.5).fill({ color: 0x160d20, alpha: 0.86 })
       this.graphics.circle(point.x, point.y, 4.5).stroke({ color, alpha: 1, width: 2 })
@@ -106,6 +133,7 @@ export class WinPresentation {
   }
   destroy(): void {
     gsap.killTweensOf(this.view)
+    gsap.killTweensOf(this.view.scale)
     this.view.destroy({ children: true })
   }
 }
