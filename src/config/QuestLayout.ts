@@ -1,8 +1,8 @@
 /* LOCKED 1200 × 800 logical cabinet geometry. */
 export const QUEST_LAYOUT = {
   stage: { width: 1200, height: 800 },
-  lookOut: { width: 112, height: 32, right: 179, bottom: 28.5 },
-  paylines: { width: 112, height: 32, left: 179, bottom: 28.5 },
+  lookOut: { width: 112, height: 32, right: 192, bottom: 29 },
+  paylines: { width: 112, height: 32, left: 192, bottom: 29 },
   reels: {
     x: 95, y: 271, width: 1010, height: 304,
     count: 5, rows: 4, columnGap: 6, rowGap: 6,

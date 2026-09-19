@@ -9,6 +9,7 @@ import type { ContributeAnimation } from '../pixi/jackpots/ContributeAnimation'
 import type { JackpotCounter } from '../pixi/jackpots/JackpotCounter'
 import type { PresentationDirector } from '../presentation/PresentationDirector'
 import { HudValuePresentation } from '../presentation/HudValuePresentation'
+import type { SpinOverride } from '../dev/SpinOverride'
 interface GameHud { message: HTMLElement; win: HTMLElement; balance: HTMLElement }
 const BET = 1
 const MINI_AWARD = 20
@@ -18,7 +19,7 @@ const GRAND_SEED = 500
 const PROGRESSIVE_RATE = 0.02
 const MAJOR_SHARE = 0.5
 const STARTING_BALANCE = 100
-const money = (value: number): string => `$${value.toFixed(2)}`
+const money = (value: number): string => `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 export class Game {
   private state = new GameState()
   private jackpots: JackpotState
@@ -31,9 +32,10 @@ export class Game {
   private hud: GameHud
   private audio: AudioManager
   private hudValues: HudValuePresentation
+  private spinOverride: SpinOverride | null
   private balance = STARTING_BALANCE
-  constructor(reels: ReelSet, spinButton: SpinButton, contributeFx: ContributeAnimation, majorCounter: JackpotCounter, grandCounter: JackpotCounter, presentation: PresentationDirector, jackpots: JackpotState, hud: GameHud, audio: AudioManager) {
-    this.reels = reels; this.spinButton = spinButton; this.contributeFx = contributeFx; this.majorCounter = majorCounter; this.grandCounter = grandCounter; this.presentation = presentation; this.jackpots = jackpots; this.hud = hud; this.audio = audio
+  constructor(reels: ReelSet, spinButton: SpinButton, contributeFx: ContributeAnimation, majorCounter: JackpotCounter, grandCounter: JackpotCounter, presentation: PresentationDirector, jackpots: JackpotState, hud: GameHud, audio: AudioManager, spinOverride: SpinOverride | null = null) {
+    this.reels = reels; this.spinButton = spinButton; this.contributeFx = contributeFx; this.majorCounter = majorCounter; this.grandCounter = grandCounter; this.presentation = presentation; this.jackpots = jackpots; this.hud = hud; this.audio = audio; this.spinOverride = spinOverride
     this.hudValues = new HudValuePresentation(hud.balance, hud.win)
     this.hudValues.setBalance(this.balance)
   }
@@ -49,7 +51,8 @@ export class Game {
     const contribution = this.getContributionAmounts()
     await this.previewContribution(contribution.major, contribution.grand)
     await this.reels.resetSymbols()
-    const result = createSpinResult()
+    const baseResult = createSpinResult()
+    const result = this.spinOverride?.consume(baseResult) ?? baseResult
     await this.reels.spin(result)
     const evaluation = evaluateWins(result, BET)
     const jackpotLabels = await this.resolveJackpotAwards(evaluation)
@@ -58,6 +61,9 @@ export class Game {
       this.balance = Number((this.balance + evaluation.totalPayout).toFixed(2))
       this.hudValues.setBalance(this.balance, 'payout')
       this.hudValues.showWin(evaluation.totalPayout)
+    }
+    if (evaluation.wins.length > 0) {
+      this.hud.message.textContent = 'WIN!'
     }
     await this.presentation.present(evaluation)
     await this.settleContribution(contribution.major, contribution.grand)
@@ -128,9 +134,15 @@ export class Game {
   }
   private buildSpinMessage(evaluation: WinEvaluation, major: number, grand: number, jackpots: JackpotTier[]): string {
     if (jackpots.length > 0) {
+      const lineWins = evaluation.wins.filter((win) => !win.jackpot)
       const jackpotWins = evaluation.wins.filter((win) => win.jackpot)
-      const details = jackpotWins.map((win) => `${win.jackpot!.toUpperCase()} • ${win.count} ${win.symbol} • ${money(win.payout)}`).join(' + ')
-      return `JACKPOT! ${details} • TOTAL +${money(evaluation.totalPayout)}`
+      const lineDetails = lineWins.map((win) =>
+        `L${win.lineIndex + 1} ${win.symbol}×${win.count} ${win.payout.toFixed(2)}×`,
+      )
+      const jackpotDetails = jackpotWins.map((win) =>
+        `${win.jackpot!.toUpperCase()} JACKPOT • ${win.count} ${win.symbol} • +${money(win.payout)}`,
+      )
+      return `${[...jackpotDetails, ...lineDetails].join(' • ')} • TOTAL +${money(evaluation.totalPayout)}`
     }
     if (evaluation.wins.length === 0) {
       return `NO WIN • BET ${money(BET)} • MAJOR +${money(major)} • GRAND +${money(grand)}`

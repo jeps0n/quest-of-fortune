@@ -6,14 +6,15 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-node_modules
-dist
-dist-ssr
+# Dependencies and production build output
+node_modules/
+dist/
+dist-ssr/
 *.local
-# Editor directories and files
+# Editor and OS files
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
@@ -22,3 +23,7 @@ dist-ssr
 *.sw?
 # Environment variables
 .env
+# Tooling build output
+.math-dist/
+.reel-dist/
+.reel-audit-dist/

@@ -1,23 +1,6 @@
-export const SYMBOL_IDS = [
-  'RING', 'SCROLL', 'COIN', 'CHEST', 'CROWN', 'GEM',
-  'ARCHER', 'KNIGHT', 'MAGE', 'DRAGON',
-] as const
-export type SymbolId = typeof SYMBOL_IDS[number]
-export interface SpinResult {
-  reels: SymbolId[][]
-  /** Authoritative stop index for each reel when the result came from REEL_STRIPS. */
-  stops?: readonly number[]
-}
-/*
- * Quest of Fortune — locked production reel set QOF-7E98A5F5.
- * Every reel contains 200 stops with the locked symbol counts:
- * RING 33, SCROLL 47, COIN 39, CHEST 22, CROWN 13, GEM 14,
- * ARCHER 11, KNIGHT 9, MAGE 7, DRAGON 5.
- *
- * Promoted after structural audit and 5,000,000-spin INPUT validation.
- */
-// PRODUCTION REEL SET: QOF-7E98A5F5
-export const REEL_STRIPS: readonly (readonly SymbolId[])[] = [
+import type { SymbolId } from '../game/math/SpinResult'
+// Locked production baseline QOF-7E98A5F5. Read-only comparison reference for future reel candidates.
+export const HISTORICAL_REEL_STRIPS: readonly (readonly SymbolId[])[] = [
   // Reel 1 — 200 stops
   [
     'SCROLL', 'SCROLL', 'GEM', 'CROWN', 'CHEST', 'CROWN', 'COIN', 'COIN',
@@ -159,18 +142,3 @@ export const REEL_STRIPS: readonly (readonly SymbolId[])[] = [
     'COIN', 'GEM', 'CROWN', 'RING', 'SCROLL', 'COIN', 'SCROLL', 'GEM',
   ],
 ] as const
-export function createSpinResult(reelCount = 5, rows = 4, random = Math.random): SpinResult {
-  const stops: number[] = []
-  const reels = Array.from({ length: reelCount }, (_, reelIndex) => {
-    const strip = REEL_STRIPS[reelIndex % REEL_STRIPS.length]
-    const stop = Math.floor(random() * strip.length)
-    stops.push(stop)
-    return reelWindow(reelIndex, stop, rows)
-  })
-  return { reels, stops }
-}
-export function reelWindow(reelIndex: number, stop: number, rows = 4): SymbolId[] {
-  const strip = REEL_STRIPS[reelIndex % REEL_STRIPS.length]
-  const normalizedStop = ((stop % strip.length) + strip.length) % strip.length
-  return Array.from({ length: rows }, (_, row) => strip[(normalizedStop + row) % strip.length])
-}

@@ -6,7 +6,13 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "math": "vite build --config vite.math.config.ts && node .math-dist/math-simulator.mjs",
+    "math:quick": "vite build --config vite.math.config.ts && node .math-dist/math-simulator.mjs --quick",
+    "math:input": "vite build --config vite.math.config.ts && node .math-dist/math-simulator.mjs --input",
+    "math:quick:input": "vite build --config vite.math.config.ts && node .math-dist/math-simulator.mjs --quick --input",
+    "reels:generate": "vite build --config vite.reels.generate.config.ts && node .reel-dist/reel-sequence-optimizer.mjs",
+    "reels:audit": "vite build --config vite.reels.audit.config.ts && node .reel-audit-dist/reel-audit.mjs"
   },
   "devDependencies": {
     "typescript": "~6.0.2",

@@ -16,6 +16,8 @@ import { JackpotCounter } from './jackpots/JackpotCounter'
 import { WinPresentation } from './wins/WinPresentation'
 import { CharacterWinPresentation, type CharacterStageTextures } from './wins/CharacterWinPresentation'
 import { PresentationDirector } from '../presentation/PresentationDirector'
+import { SpinOverride } from '../dev/SpinOverride'
+import { DemoControls } from '../dev/DemoControls'
 export interface PixiGame { app: Application; layers: GameLayers; destroy: () => void }
 interface CreatePixiGameOptions { host: HTMLElement; presentation: HTMLElement; jackpots: JackpotState; majorElement: HTMLElement; grandElement: HTMLElement; messageElement: HTMLElement; winElement: HTMLElement; balanceElement: HTMLElement }
 export async function createPixiGame(options: CreatePixiGameOptions): Promise<PixiGame> {
@@ -32,6 +34,8 @@ export async function createPixiGame(options: CreatePixiGameOptions): Promise<Pi
   const paylinesTexture = await Assets.load('assets/cabinet/quest-paylines.png')
   const layers = createGameLayers(app.stage)
   const audio = new AudioManager()
+  const spinOverride = import.meta.env.DEV ? new SpinOverride() : null
+  const demoControls = spinOverride ? new DemoControls(spinOverride) : null
   const reels = new ReelSet(audio)
   const contribute = new ContributeAnimation(audio)
   const majorCounter = new JackpotCounter(options.majorElement)
@@ -49,6 +53,7 @@ export async function createPixiGame(options: CreatePixiGameOptions): Promise<Pi
   let game: Game | undefined
   let isShowingPaylines = false
   const spinButton = createSpinButton(() => { void game?.spin() })
+  const unsubscribeSpinArmed = spinOverride?.onArmedChange((armed) => spinButton.setArmed(armed)) ?? null
   const setGameplayLayersVisible = (visible: boolean): void => {
     const alpha = visible ? 1 : 0
     for (const layer of [layers.reels, layers.wins, layers.cabinetFx]) {
@@ -69,8 +74,13 @@ export async function createPixiGame(options: CreatePixiGameOptions): Promise<Pi
         gsap.to(layer, { alpha, duration: 0.7, ease: 'power1.inOut' })
       }
       gsap.killTweensOf(spinButton.view)
-      spinButton.view.eventMode = active ? 'none' : 'static'
-      gsap.to(spinButton.view, { alpha, duration: 0.7, ease: 'power1.inOut' })
+      const shouldShowSpin = !active && !isShowingPaylines
+      spinButton.view.eventMode = shouldShowSpin ? 'static' : 'none'
+      gsap.to(spinButton.view, {
+        alpha: shouldShowSpin ? 1 : 0,
+        duration: 0.7,
+        ease: 'power1.inOut',
+      })
       if (paylinesButton) {
         // Keep PAYLINES/GAME visually synchronized with the cabinet transition.
         // It remains mounted so LOOK OUT fades it instead of popping it on/off.
@@ -99,12 +109,14 @@ export async function createPixiGame(options: CreatePixiGameOptions): Promise<Pi
   paylinesGuide.visible = false
   layers.cabinetFx.addChild(contribute.view)
   layers.controls.addChild(spinButton.view, paylinesButton.view, lookOutButton.view)
-  game = new Game(reels, spinButton, contribute, majorCounter, grandCounter, presentationDirector, options.jackpots, { message: options.messageElement, win: options.winElement, balance: options.balanceElement }, audio)
+  game = new Game(reels, spinButton, contribute, majorCounter, grandCounter, presentationDirector, options.jackpots, { message: options.messageElement, win: options.winElement, balance: options.balanceElement }, audio, spinOverride)
   return {
     app,
     layers,
     destroy: () => {
       if (isShowingPaylines) options.presentation.style.visibility = ''
+      unsubscribeSpinArmed?.()
+      demoControls?.destroy()
       game?.destroy()
       reels.destroy()
       winPresentation.destroy()

@@ -1,5 +1,5 @@
 import { gsap } from 'gsap'
-const money = (value: number): string => `$${value.toFixed(2)}`
+const money = (value: number): string => `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 export class HudValuePresentation {
   private readonly balanceElement: HTMLElement
   private readonly winElement: HTMLElement

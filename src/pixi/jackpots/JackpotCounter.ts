@@ -1,4 +1,5 @@
 import { gsap } from 'gsap'
+const money = (value: number): string => `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 export class JackpotCounter {
   private element: HTMLElement
   constructor(element: HTMLElement) { this.element = element }
@@ -12,8 +13,9 @@ export class JackpotCounter {
         value: to,
         duration: 0.75,
         ease: 'power2.out',
-        onUpdate: () => { this.element.textContent = `$${state.value.toFixed(2)}` },
+        onUpdate: () => { this.element.textContent = money(state.value) },
         onComplete: () => {
+          this.element.textContent = money(to)
           gsap.to(this.element, { scale: 1, duration: 0.22, ease: 'back.out(2)' })
           resolve()
         },
