@@ -1,15 +1,15 @@
 import { Container } from 'pixi.js'
 import type { AudioManager } from '../../audio/AudioManager'
 import { SYMBOL_IDS, type SymbolId } from '../../game/math/SpinResult'
-import { QuestSymbol } from './Symbol'
+import { SymbolSprite } from './SymbolSprite'
 export class ReelSymbolPool {
   readonly view = new Container()
-  readonly symbols: QuestSymbol[]
+  readonly symbols: SymbolSprite[]
   private cellHeight: number
   private gap: number
   constructor(size: number, cellWidth: number, cellHeight: number, gap: number, audio: AudioManager) {
     this.cellHeight = cellHeight; this.gap = gap
-    this.symbols = Array.from({ length: size }, (_, i) => new QuestSymbol(SYMBOL_IDS[i % SYMBOL_IDS.length], cellWidth, cellHeight, audio))
+    this.symbols = Array.from({ length: size }, (_, i) => new SymbolSprite(SYMBOL_IDS[i % SYMBOL_IDS.length], cellWidth, cellHeight, audio))
     this.symbols.forEach((symbol) => this.view.addChild(symbol.view)); this.layout()
   }
   get pitch(): number { return this.cellHeight + this.gap }
@@ -20,6 +20,6 @@ export class ReelSymbolPool {
     this.symbols.unshift(last); this.view.setChildIndex(last.view, 0); this.layout()
   }
   applyVisible(ids: readonly SymbolId[], offset = 1): void { ids.forEach((id, row) => this.symbols[row + offset]?.setSymbol(id)) }
-  visible(rows: number, offset = 1): QuestSymbol[] { return this.symbols.slice(offset, offset + rows) }
+  visible(rows: number, offset = 1): SymbolSprite[] { return this.symbols.slice(offset, offset + rows) }
   destroy(): void { this.symbols.forEach((symbol) => symbol.destroy()); this.view.destroy() }
 }

@@ -23,8 +23,17 @@ export class ReelSet {
   spin(result: SpinResult): Promise<void> { return this.sequencer.spin(result) }
   async presentWins(wins: readonly Win[]): Promise<void> {
     const positions = wins.flatMap((win) => win.positions)
-    const keys = new Set(positions.map((p) => `${p.reel}:${p.row}`)); const tasks: Promise<void>[] = []
-    this.reels.forEach((reel, reelIndex) => reel.visibleSymbols().forEach((symbol, row) => tasks.push(symbol.animator.play(keys.has(`${reelIndex}:${row}`) ? 'win' : 'dim'))))
+    const keys = new Set(positions.map((p) => `${p.reel}:${p.row}`))
+    const tasks: Promise<void>[] = []
+    this.reels.forEach((reel, reelIndex) =>
+      reel.visibleSymbols().forEach((symbol, row) => {
+        const key = `${reelIndex}:${row}`
+        // A subtle left-to-right ripple makes the player read the winning
+        // route instead of seeing every cell fire as one flat event.
+        const delay = keys.has(key) ? reelIndex * 0.045 : 0
+        tasks.push(symbol.animator.play(keys.has(key) ? 'win' : 'dim', delay))
+      }),
+    )
     await Promise.all(tasks)
   }
   async presentHighWins(wins: readonly Win[], character: CharacterSymbol): Promise<void> {
@@ -34,7 +43,10 @@ export class ReelSet {
     const tasks: Promise<void>[] = []
     this.reels.forEach((reel, reelIndex) => reel.visibleSymbols().forEach((symbol, row) => {
       const key = `${reelIndex}:${row}`
-      tasks.push(symbol.animator.play(characterKeys.has(key) ? 'bigWin' : keys.has(key) ? 'win' : 'dim'))
+      const isCharacter = characterKeys.has(key)
+      const isWinner = keys.has(key)
+      const delay = isWinner ? reelIndex * 0.05 : 0
+      tasks.push(symbol.animator.play(isCharacter ? 'bigWin' : isWinner ? 'win' : 'dim', delay))
     }))
     await Promise.all(tasks)
   }

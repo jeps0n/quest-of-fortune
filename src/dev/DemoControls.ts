@@ -45,7 +45,12 @@ export class DemoControls {
     this.status = document.createElement('div')
     this.armButton = this.createButton('ARM NEXT SPIN')
     this.keyHandler = (event) => {
-      if (event.ctrlKey && event.shiftKey && event.code === 'KeyD') {
+      if (
+        event.ctrlKey &&
+        event.altKey &&
+        event.shiftKey &&
+        event.code === 'ArrowDown'
+      ) {
         event.preventDefault()
         this.setOpen(Boolean(this.root.hidden))
       }
@@ -80,7 +85,7 @@ export class DemoControls {
     title.textContent = 'Demo Spin Controls'
     Object.assign(title.style, { fontWeight: '700', fontSize: '15px', marginBottom: '10px' })
     const hint = document.createElement('div')
-    hint.textContent = 'Ctrl + Shift + D to toggle'
+    hint.textContent = 'Ctrl + Alt + Shift + Q to toggle'
     Object.assign(hint.style, { opacity: '0.62', fontSize: '11px', marginBottom: '12px' })
     const fields = document.createElement('div')
     Object.assign(fields.style, { display: 'grid', gap: '8px' })

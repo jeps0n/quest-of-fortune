@@ -11,6 +11,7 @@ import { createPaylinesButton } from './controls/PaylinesButton'
 import { createPaylinesGuide } from './paylines/PaylinesGuide'
 import { createSpinButton } from './controls/SpinButton'
 import { ReelSet } from './reels/ReelSet'
+import { loadSymbolArtwork } from './reels/SymbolAssets'
 import { ContributeAnimation } from './jackpots/ContributeAnimation'
 import { JackpotCounter } from './jackpots/JackpotCounter'
 import { WinPresentation } from './wins/WinPresentation'
@@ -32,10 +33,11 @@ export async function createPixiGame(options: CreatePixiGameOptions): Promise<Pi
     DRAGON: await Assets.load('assets/stage/dragon-stage.png'),
   }
   const paylinesTexture = await Assets.load('assets/cabinet/quest-paylines.png')
+  await loadSymbolArtwork()
   const layers = createGameLayers(app.stage)
   const audio = new AudioManager()
-  const spinOverride = import.meta.env.DEV ? new SpinOverride() : null
-  const demoControls = spinOverride ? new DemoControls(spinOverride) : null
+  const spinOverride = new SpinOverride()
+  const demoControls = new DemoControls(spinOverride)
   const reels = new ReelSet(audio)
   const contribute = new ContributeAnimation(audio)
   const majorCounter = new JackpotCounter(options.majorElement)
@@ -53,7 +55,7 @@ export async function createPixiGame(options: CreatePixiGameOptions): Promise<Pi
   let game: Game | undefined
   let isShowingPaylines = false
   const spinButton = createSpinButton(() => { void game?.spin() })
-  const unsubscribeSpinArmed = spinOverride?.onArmedChange((armed) => spinButton.setArmed(armed)) ?? null
+  const unsubscribeSpinArmed = spinOverride.onArmedChange((armed) => spinButton.setArmed(armed))
   const setGameplayLayersVisible = (visible: boolean): void => {
     const alpha = visible ? 1 : 0
     for (const layer of [layers.reels, layers.wins, layers.cabinetFx]) {
@@ -116,7 +118,7 @@ export async function createPixiGame(options: CreatePixiGameOptions): Promise<Pi
     destroy: () => {
       if (isShowingPaylines) options.presentation.style.visibility = ''
       unsubscribeSpinArmed?.()
-      demoControls?.destroy()
+      demoControls.destroy()
       game?.destroy()
       reels.destroy()
       winPresentation.destroy()

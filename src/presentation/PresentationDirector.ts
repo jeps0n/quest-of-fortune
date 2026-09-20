@@ -51,7 +51,7 @@ export class PresentationDirector {
         // HIGH wins get a deliberate rhythm of their own.
         // First let the player read the actual winning line, then clear
         // the viewport before any theatrical information arrives.
-        await this.wait(0.68)
+        await this.wait(0.32)
         await Promise.all([
           this.reels.fadeForStage(0.025, 0.48),
           this.wins.fadeTo(0, 0.36),
@@ -92,7 +92,7 @@ export class PresentationDirector {
         await this.reels.presentWins(
           evaluation.wins,
         )
-        await this.wait(0.24)
+        await this.wait(0.12)
         await this.wins.stagePulse()
       } else {
         await this.reels.presentWins(

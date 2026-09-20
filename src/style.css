@@ -592,3 +592,131 @@ body {
 .hud-item::after {
   display: none;
 }
+/* ---------------- STARTUP PRESENTATION ----------------
+   The DOM cabinet and Pixi canvas are revealed as one completed composition.
+   Startup magic is deliberately contained inside the cabinet footprint: it may
+   reach the ornate frame, but the visible effect viewport is tucked beneath
+   the left/right cabinet edges so no residual glow leaks into negative space.
+*/
+.cabinet-motion {
+  position: absolute;
+  inset: 0;
+  width: 1200px;
+  height: 800px;
+  visibility: hidden;
+  opacity: 0;
+  overflow: visible;
+  transform-origin: 50% 52%;
+  will-change: transform, opacity, filter;
+}
+.cabinet-composition {
+  position: absolute;
+  inset: 0;
+  width: 1200px;
+  height: 800px;
+  overflow: visible;
+}
+.startup-magic-layer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 5%;
+  right: 5%;
+  z-index: 20;
+  overflow: hidden;
+  pointer-events: none;
+}
+/* A soft rounded-rectangle bloom that follows the cabinet's geometry instead
+   of collapsing toward a circular center. Gold provides the warm inner light;
+   purple carries the magical outer body. The narrower magic viewport clips
+   both beneath the ornate sidework. */
+.startup-aura-bloom {
+  position: absolute;
+  left: 0.75%;
+  right: 0.75%;
+  top: 3.25%;
+  bottom: 3.25%;
+  opacity: 0;
+  border-radius: 54px;
+  background:
+    radial-gradient(ellipse at 50% 48%, rgba(255, 225, 150, 0.26) 0%, rgba(238, 184, 78, 0.16) 36%, transparent 67%),
+    linear-gradient(115deg,
+      rgba(112, 52, 190, 0.22) 0%,
+      rgba(154, 78, 222, 0.16) 24%,
+      rgba(245, 194, 87, 0.16) 52%,
+      rgba(116, 54, 194, 0.18) 78%,
+      rgba(82, 35, 153, 0.20) 100%);
+  box-shadow:
+    inset 0 0 34px rgba(255, 215, 126, 0.18),
+    inset 0 0 78px rgba(139, 66, 211, 0.18),
+    inset 0 0 122px rgba(92, 38, 164, 0.10);
+  filter: blur(12px) saturate(1.16);
+  mix-blend-mode: screen;
+  transform-origin: 50% 50%;
+  will-change: transform, opacity;
+}
+/* A second inset shell keeps the corners alive so the bloom fills the cabinet
+   footprint without exposing a hard rectangular panel. */
+.startup-aura-bloom::after {
+  content: '';
+  position: absolute;
+  inset: 2.5%;
+  border-radius: 46px;
+  background:
+    linear-gradient(90deg,
+      rgba(105, 43, 183, 0.13) 0%,
+      rgba(255, 211, 119, 0.10) 22%,
+      rgba(255, 229, 166, 0.14) 50%,
+      rgba(225, 169, 72, 0.10) 76%,
+      rgba(112, 47, 188, 0.13) 100%);
+  box-shadow:
+    inset 0 0 24px rgba(255, 224, 153, 0.13),
+    inset 0 0 54px rgba(129, 57, 202, 0.13);
+  filter: blur(8px);
+}
+/* Slightly broader than the earlier wipe, but still subordinate to the
+   cabinet artwork. The parent clips the diagonal band at every cabinet edge. */
+.startup-magic-wipe {
+  position: absolute;
+  top: -7%;
+  bottom: -7%;
+  left: 39.5%;
+  width: 21%;
+  opacity: 0;
+  pointer-events: none;
+  transform-origin: 50% 50%;
+  background:
+    linear-gradient(90deg,
+      transparent 0%,
+      rgba(105, 48, 180, 0.04) 12%,
+      rgba(154, 80, 219, 0.10) 28%,
+      rgba(244, 191, 82, 0.17) 42%,
+      rgba(255, 235, 184, 0.32) 50%,
+      rgba(229, 176, 79, 0.17) 58%,
+      rgba(132, 61, 204, 0.09) 73%,
+      transparent 100%);
+  filter: blur(10px) drop-shadow(0 0 8px rgba(178, 101, 230, 0.14));
+  mix-blend-mode: screen;
+  will-change: transform, opacity;
+}
+.startup-magic-wipe::after {
+  content: '';
+  position: absolute;
+  inset: 2% 43%;
+  border-radius: 50%;
+  background: linear-gradient(180deg,
+    transparent 2%,
+    rgba(145, 74, 213, 0.10) 24%,
+    rgba(255, 226, 157, 0.25) 50%,
+    rgba(156, 78, 220, 0.11) 76%,
+    transparent 98%);
+  filter: blur(4px);
+  opacity: 0.54;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cabinet-motion {
+    transform: none !important;
+    filter: none !important;
+  }
+  .startup-magic-layer { display: none; }
+}

@@ -23,7 +23,15 @@ type CharacterMotion = {
   stageEase: string
   titleOffsetX: number
   titleOffsetY: number
+  titleStartScaleX: number
+  titleStartScaleY: number
+  titleStartRotation: number
+  titleDuration: number
   titleEase: string
+  titleImpactScale: number
+  titleImpactRotation: number
+  titleImpactDuration: number
+  titleResolveDuration: number
   payoutOffsetX: number
   payoutOffsetY: number
   hold: number
@@ -37,28 +45,44 @@ const CHARACTER_MOTION: Record<CharacterSymbol, CharacterMotion> = {
   ARCHER: {
     stageOffsetX: -34, stageOffsetY: 0, stageScale: 1.018,
     stageDuration: 0.72, stageEase: 'power3.out',
-    titleOffsetX: -34, titleOffsetY: 8, titleEase: 'power3.out',
+    titleOffsetX: -86, titleOffsetY: 0,
+    titleStartScaleX: 0.90, titleStartScaleY: 1.04, titleStartRotation: -0.025,
+    titleDuration: 0.24, titleEase: 'power4.out',
+    titleImpactScale: 1.035, titleImpactRotation: 0.012,
+    titleImpactDuration: 0.08, titleResolveDuration: 0.14,
     payoutOffsetX: 18, payoutOffsetY: 18, hold: 1.20,
   },
   // Short forward impact: the Knight lands with weight rather than travel.
   KNIGHT: {
     stageOffsetX: 0, stageOffsetY: -5, stageScale: 1.075,
     stageDuration: 0.48, stageEase: 'back.out(1.18)',
-    titleOffsetX: 0, titleOffsetY: -30, titleEase: 'back.out(1.65)',
-    payoutOffsetX: 0, payoutOffsetY: 24, hold: 1.30,
+    titleOffsetX: 0, titleOffsetY: -78,
+    titleStartScaleX: 1.18, titleStartScaleY: 0.78, titleStartRotation: 0,
+    titleDuration: 0.22, titleEase: 'power4.in',
+    titleImpactScale: 1.10, titleImpactRotation: 0,
+    titleImpactDuration: 0.10, titleResolveDuration: 0.18,
+    payoutOffsetX: 0, payoutOffsetY: -24, hold: 1.30,
   },
   // Gentle rise and longer ease: the Mage feels suspended and controlled.
   MAGE: {
     stageOffsetX: 0, stageOffsetY: 22, stageScale: 1.028,
     stageDuration: 0.92, stageEase: 'sine.out',
-    titleOffsetX: 0, titleOffsetY: 28, titleEase: 'power2.out',
+    titleOffsetX: 0, titleOffsetY: 64,
+    titleStartScaleX: 0.78, titleStartScaleY: 0.78, titleStartRotation: -0.035,
+    titleDuration: 0.76, titleEase: 'sine.out',
+    titleImpactScale: 1.025, titleImpactRotation: 0.018,
+    titleImpactDuration: 0.24, titleResolveDuration: 0.34,
     payoutOffsetX: 0, payoutOffsetY: 28, hold: 1.42,
   },
   // Slow looming push: the Dragon owns more time and apparent mass.
   DRAGON: {
     stageOffsetX: 14, stageOffsetY: 10, stageScale: 1.095,
     stageDuration: 1.05, stageEase: 'power2.out',
-    titleOffsetX: 30, titleOffsetY: 4, titleEase: 'power2.out',
+    titleOffsetX: 0, titleOffsetY: 4,
+    titleStartScaleX: 1.52, titleStartScaleY: 1.52, titleStartRotation: 0.018,
+    titleDuration: 0.86, titleEase: 'power2.out',
+    titleImpactScale: 1.08, titleImpactRotation: -0.008,
+    titleImpactDuration: 0.22, titleResolveDuration: 0.34,
     payoutOffsetX: -18, payoutOffsetY: 20, hold: 1.55,
   },
 }
@@ -261,7 +285,11 @@ export class CharacterWinPresentation {
     this.shade.alpha = 0
     this.border.alpha = 0
     this.title.alpha = 0
-    this.title.scale.set(0.94)
+    this.title.scale.set(
+      motion.titleStartScaleX,
+      motion.titleStartScaleY,
+    )
+    this.title.rotation = motion.titleStartRotation
     this.payout.alpha = 0
     this.payout.scale.set(0.96)
   }
@@ -373,22 +401,62 @@ export class CharacterWinPresentation {
           alpha: 0,
           x: cx + motion.titleOffsetX,
           y: cy - 20 + motion.titleOffsetY,
+          rotation: motion.titleStartRotation,
         },
         {
           alpha: 1,
           x: cx,
           y: cy - 20,
-          duration: 0.48,
+          rotation: 0,
+          duration: motion.titleDuration,
           ease: motion.titleEase,
         },
       )
         .to(
           this.title.scale,
           {
+            x: motion.titleImpactScale,
+            y: motion.titleImpactScale,
+            duration: motion.titleDuration,
+            ease: motion.titleEase,
+          },
+          '<',
+        )
+        // Each HIGH owns a visibly different arrival axis, then gets one
+        // character-specific impact/recoil before resolving to shared framing.
+        .to(
+          this.title,
+          {
+            rotation: motion.titleImpactRotation,
+            duration: motion.titleImpactDuration,
+            ease: character === 'KNIGHT' ? 'power4.out' : 'power2.out',
+          },
+        )
+        .to(
+          this.title.scale,
+          {
+            x: character === 'KNIGHT' ? 0.96 : 1,
+            y: character === 'KNIGHT' ? 1.05 : 1,
+            duration: motion.titleImpactDuration,
+            ease: character === 'KNIGHT' ? 'power4.out' : 'power2.out',
+          },
+          '<',
+        )
+        .to(
+          this.title,
+          {
+            rotation: 0,
+            duration: motion.titleResolveDuration,
+            ease: character === 'MAGE' ? 'sine.inOut' : 'power2.out',
+          },
+        )
+        .to(
+          this.title.scale,
+          {
             x: 1,
             y: 1,
-            duration: 0.42,
-            ease: 'power2.out',
+            duration: motion.titleResolveDuration,
+            ease: character === 'MAGE' ? 'sine.inOut' : 'back.out(1.7)',
           },
           '<',
         )
@@ -396,7 +464,7 @@ export class CharacterWinPresentation {
         .to(
           {},
           {
-            duration: 0.62,
+            duration: character === 'ARCHER' ? 0.42 : 0.62,
           },
         )
       // ------------------------------------------------------------
@@ -522,6 +590,7 @@ export class CharacterWinPresentation {
     this.shade.alpha = 1
     this.border.alpha = 1
     this.title.scale.set(1)
+    this.title.rotation = 0
     this.payout.scale.set(1)
     this.backdrop.scale.set(1)
     this.view.alpha = 0
