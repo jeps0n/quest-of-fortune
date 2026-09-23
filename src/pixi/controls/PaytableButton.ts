@@ -2,12 +2,12 @@ import { Container, Graphics, Text } from 'pixi.js'
 import { gsap } from 'gsap'
 import { QUEST_LAYOUT } from '../../config/QuestLayout'
 const CORNER_RADIUS = 10
-export interface PaylinesButton { view: Container; setActive: (active: boolean) => void; destroy: () => void }
-export function createPaylinesButton(onSelect: () => void): PaylinesButton {
-  const layout = QUEST_LAYOUT.paylines
-  const root = new Container({ label: 'paylines-button' })
+export interface PaytableButton { view: Container; setActive: (active: boolean) => void; destroy: () => void }
+export function createPaytableButton(onSelect: () => void): PaytableButton {
+  const layout = QUEST_LAYOUT.paytable
+  const root = new Container({ label: 'paytable-button' })
   const shadow = new Graphics(), face = new Graphics(), innerLine = new Graphics(), border = new Graphics()
-  const label = new Text({ text: 'PAYLINES', resolution: Math.max(2, window.devicePixelRatio || 1), style: { fill: 0xf6e7bb, fontFamily: 'Georgia, Times New Roman, serif', fontSize: 10, fontWeight: '700', letterSpacing: 1.05 } })
+  const label = new Text({ text: 'PAYTABLE', resolution: Math.max(2, window.devicePixelRatio || 1), style: { fill: 0xf6e7bb, fontFamily: 'Georgia, Times New Roman, serif', fontSize: 10, fontWeight: '700', letterSpacing: 1.05 } })
   root.position.set(layout.left, QUEST_LAYOUT.stage.height - layout.bottom - layout.height)
   root.eventMode = 'static'; root.cursor = 'pointer'
   root.hitArea = { contains: (x: number, y: number) => x >= 0 && x <= layout.width && y >= 0 && y <= layout.height }

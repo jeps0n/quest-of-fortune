@@ -1,10 +1,12 @@
-import { createSpinResult, type SpinResult, type SymbolId } from '../game/math/SpinResult'
+import { createSpinResult, REEL_STRIPS, type SpinResult, type SymbolId } from '../game/math/SpinResult'
 import { REEL_STRIPS_TO_AUDIT } from './ReelAuditInput'
 import { evaluateWins, type JackpotTier } from '../game/math/WinEvaluator'
+import { PAYLINES as PAYLINES_FOR_EXACT } from '../game/math/Paylines'
+import { PAYTABLE as PAYTABLE_FOR_EXACT } from '../game/math/Paytable'
 const DEFAULT_SPINS = 5_000_000
 const QUICK_SPINS = 100_000
 const BET_PER_SPIN = 1
-const SEED = 0x514f46
+const SEED = 0x30001075
 const MAJOR_PROGRESSIVE_CONTRIBUTION_PER_SPIN = 0.01
 const GRAND_PROGRESSIVE_CONTRIBUTION_PER_SPIN = 0.01
 const TOTAL_PROGRESSIVE_CONTRIBUTION_PER_SPIN =
@@ -68,6 +70,72 @@ function createSpinResultFromStrips(
     return Array.from({ length: rows }, (_, row) => strip[(stop + row) % strip.length])
   })
   return { reels, stops }
+}
+interface ExactMathStats {
+  paylineRtp: number
+  jackpotRtp: number
+  baseRtp: number
+  jackpotFrequency: Record<JackpotTier, number>
+}
+const JACKPOT_SYMBOLS: Readonly<Record<JackpotTier, SymbolId>> = {
+  mini: 'ARCHER', minor: 'KNIGHT', major: 'MAGE', grand: 'DRAGON',
+}
+const JACKPOT_PAYOUTS: Readonly<Record<JackpotTier, number>> = {
+  mini: 20, minor: 50, major: 100, grand: 500,
+}
+function exactWindowCountDistribution(strip: readonly SymbolId[], symbol: SymbolId): number[] {
+  const counts = [0, 0, 0, 0, 0]
+  for (let stop = 0; stop < strip.length; stop += 1) {
+    let copies = 0
+    for (let row = 0; row < 4; row += 1) if (strip[(stop + row) % strip.length] === symbol) copies += 1
+    counts[copies] += 1
+  }
+  return counts.map((count) => count / strip.length)
+}
+function exactJackpotProbability(strips: readonly (readonly SymbolId[])[], symbol: SymbolId): number {
+  let totalDistribution = [1]
+  for (const strip of strips) {
+    const reelDistribution = exactWindowCountDistribution(strip, symbol)
+    const next = Array(totalDistribution.length + 4).fill(0) as number[]
+    totalDistribution.forEach((leftProbability, leftCount) => {
+      reelDistribution.forEach((rightProbability, rightCount) => {
+        next[leftCount + rightCount] += leftProbability * rightProbability
+      })
+    })
+    totalDistribution = next
+  }
+  return totalDistribution.slice(5).reduce((sum, probability) => sum + probability, 0)
+}
+function exactPaylineRtp(strips: readonly (readonly SymbolId[])[]): number {
+  let expectedReturn = 0
+for (let lineIndex = 0; lineIndex < awaitPaylines().length; lineIndex += 1) {
+    for (const symbol of Object.keys(awaitPaytable()) as SymbolId[]) {
+      const probabilities = strips.map((strip) => strip.reduce((count, item) => count + (item === symbol ? 1 : 0), 0) / strip.length)
+      for (const [countText, payout] of Object.entries(awaitPaytable()[symbol])) {
+        const count = Number(countText)
+        let probability = 1
+        for (let reel = 0; reel < count; reel += 1) probability *= probabilities[reel]
+        if (count < strips.length) probability *= 1 - probabilities[count]
+        expectedReturn += probability * payout
+      }
+    }
+  }
+  return expectedReturn * 100
+}
+// Local wrappers keep the exact-math implementation tied to the same runtime
+// definitions used by evaluateWins without creating a second math contract.
+function awaitPaylines() { return PAYLINES_FOR_EXACT }
+function awaitPaytable() { return PAYTABLE_FOR_EXACT }
+function exactMath(strips: readonly (readonly SymbolId[])[]): ExactMathStats {
+  const paylineRtp = exactPaylineRtp(strips)
+  const jackpotFrequency = {} as Record<JackpotTier, number>
+  let jackpotRtp = 0
+  for (const tier of ['mini', 'minor', 'major', 'grand'] as const) {
+    const probability = exactJackpotProbability(strips, JACKPOT_SYMBOLS[tier])
+    jackpotFrequency[tier] = 1 / probability
+    jackpotRtp += probability * JACKPOT_PAYOUTS[tier] * 100
+  }
+  return { paylineRtp, jackpotRtp, baseRtp: paylineRtp + jackpotRtp, jackpotFrequency }
 }
 function simulate(spins: number, reelSource: ReelSource): SimulationStats {
   const random = seededRandom(SEED)
@@ -144,6 +212,15 @@ function printReport(stats: SimulationStats, runtimeSeconds: number, reelSource:
     major: 'MAJOR ($100+)',
     grand: 'GRAND ($500+)',
   }
+  const exact = exactMath(reelSource === 'input' ? REEL_STRIPS_TO_AUDIT : REEL_STRIPS)
+  console.log('\nEXACT LONG-RUN MATH — REEL DERIVED')
+  console.log('==================================')
+  console.log(`Payline RTP: ${exact.paylineRtp.toFixed(4)}%`)
+  console.log(`Jackpot RTP: ${exact.jackpotRtp.toFixed(4)}%`)
+  console.log(`Base RTP:    ${exact.baseRtp.toFixed(4)}%  (${percentagePointDelta(exact.baseRtp, TARGET_BASE_RTP)})`)
+  for (const tier of ['mini', 'minor', 'major', 'grand'] as const) {
+    console.log(`${tier.toUpperCase().padEnd(6)} 1 / ${exact.jackpotFrequency[tier].toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`)
+  }
   console.log('\nQUEST OF FORTUNE — MATH VALIDATION')
   console.log('==================================')
   console.log(`Seed: 0x${SEED.toString(16).toUpperCase()}`)
@@ -174,8 +251,10 @@ function printReport(stats: SimulationStats, runtimeSeconds: number, reelSource:
   )
   console.log('')
   console.log('')
-  console.log('JACKPOT FREQUENCY')
-  console.log('----------------------------------------------------------------------------')
+  console.log('JACKPOT FREQUENCY / HITS')
+  console.log('--------------------------------------------------------------------------------------')
+  console.log(`${'JACKPOT'.padEnd(27)}${'SIM FREQUENCY'.padStart(14)}${'HITS'.padStart(10)}${'TARGET'.padStart(20)}${'DELTA'.padStart(20)}`)
+  console.log('-'.repeat(91))
   for (const tier of ['mini', 'minor', 'major', 'grand'] as const) {
     const targetFrequency = TARGET_JACKPOT_FREQUENCY[tier]
     const hits = stats.jackpotHits[tier]
@@ -183,9 +262,12 @@ function printReport(stats: SimulationStats, runtimeSeconds: number, reelSource:
       hits === 0 ? 'no hits' : `1 / ${(stats.spins / hits).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
     const target = `1 / ${targetFrequency.toLocaleString()}`
     console.log(
-      `${jackpotLabels[tier].padEnd(27)}${actualFrequency.padStart(14)}${target.padStart(20)}${jackpotFrequencyDelta(hits, stats.spins, targetFrequency).padStart(20)}`,
+      `${jackpotLabels[tier].padEnd(27)}${actualFrequency.padStart(14)}${hits.toLocaleString().padStart(10)}${target.padStart(20)}${jackpotFrequencyDelta(hits, stats.spins, targetFrequency).padStart(20)}`,
     )
   }
+  const totalJackpotHits = Object.values(stats.jackpotHits).reduce((sum, hits) => sum + hits, 0)
+  console.log('-'.repeat(91))
+  console.log(`${'TOTAL JACKPOT HITS'.padEnd(41)}${totalJackpotHits.toLocaleString().padStart(10)}`)
   console.log('')
   console.log('')
   console.log('RUN DETAILS')

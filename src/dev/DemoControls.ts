@@ -85,8 +85,45 @@ export class DemoControls {
     title.textContent = 'Demo Spin Controls'
     Object.assign(title.style, { fontWeight: '700', fontSize: '15px', marginBottom: '10px' })
     const hint = document.createElement('div')
-    hint.textContent = 'Ctrl + Alt + Shift + Q to toggle'
-    Object.assign(hint.style, { opacity: '0.62', fontSize: '11px', marginBottom: '12px' })
+    Object.assign(hint.style, {
+      display: 'flex',
+      alignItems: 'baseline',
+      gap: '3px',
+      fontSize: '11px',
+      marginBottom: '12px',
+      whiteSpace: 'nowrap',
+    })
+    const appendHintPart = (text: string, styles: Partial<CSSStyleDeclaration>) => {
+      const part = document.createElement('span')
+      part.textContent = text
+      Object.assign(part.style, styles)
+      hint.appendChild(part)
+    }
+    const keyStyle: Partial<CSSStyleDeclaration> = {
+      color: '#f5f1e8',
+      fontWeight: '700',
+    }
+    const separatorStyle: Partial<CSSStyleDeclaration> = {
+      color: '#8ca4ad',
+      fontWeight: '600',
+    }
+    appendHintPart('Ctrl', keyStyle)
+    appendHintPart('+', separatorStyle)
+    appendHintPart('Alt', keyStyle)
+    appendHintPart('+', separatorStyle)
+    appendHintPart('Shift', keyStyle)
+    appendHintPart('+', separatorStyle)
+    appendHintPart('↓', {
+      ...keyStyle,
+      fontFamily: 'Arial Black, Arial, system-ui, sans-serif',
+      fontSize: '15px',
+      fontWeight: '900',
+      lineHeight: '0.8',
+    })
+    appendHintPart('to toggle', {
+      color: '#9da3ad',
+      fontWeight: '400',
+    })
     const fields = document.createElement('div')
     Object.assign(fields.style, { display: 'grid', gap: '8px' })
     fields.append(

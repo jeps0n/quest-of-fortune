@@ -12,7 +12,7 @@ export interface Win {
   jackpot?: JackpotTier
 }
 export interface WinEvaluation { wins: Win[]; totalPayout: number }
-const ANYWHERE_JACKPOTS: Partial<Record<SymbolId, JackpotTier>> = {
+export const ANYWHERE_JACKPOTS: Partial<Record<SymbolId, JackpotTier>> = {
   ARCHER: 'mini', KNIGHT: 'minor', MAGE: 'major', DRAGON: 'grand',
 }
 const JACKPOT_PAYOUTS: Record<JackpotTier, number> = {

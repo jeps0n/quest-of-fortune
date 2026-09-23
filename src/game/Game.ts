@@ -66,13 +66,13 @@ export class Game {
       this.hud.message.textContent = 'WIN!'
     }
     await this.presentation.present(evaluation)
+    await this.resetAwardedProgressiveCounters(jackpotLabels, evaluation)
     await this.settleContribution(contribution.major, contribution.grand)
     this.hud.message.textContent = this.buildSpinMessage(evaluation, contribution.major, contribution.grand, jackpotLabels)
     this.finish()
   }
   private async resolveJackpotAwards(evaluation: WinEvaluation): Promise<JackpotTier[]> {
     const awarded = new Set<JackpotTier>()
-    const resetAnimations: Promise<void>[] = []
     for (const win of evaluation.wins) {
       if (!win.jackpot || awarded.has(win.jackpot)) continue
       awarded.add(win.jackpot)
@@ -87,21 +87,30 @@ export class Game {
           const from = this.jackpots.majorValue
           win.payout = from
           this.jackpots = { ...this.jackpots, majorValue: MAJOR_SEED }
-          resetAnimations.push(this.majorCounter.animate(from, MAJOR_SEED))
           break
         }
         case 'grand': {
           const from = this.jackpots.grandValue
           win.payout = from
           this.jackpots = { ...this.jackpots, grandValue: GRAND_SEED }
-          resetAnimations.push(this.grandCounter.animate(from, GRAND_SEED))
           break
         }
       }
     }
     evaluation.totalPayout = evaluation.wins.reduce((sum, win) => sum + win.payout, 0)
-    if (resetAnimations.length > 0) await Promise.all(resetAnimations)
     return [...awarded]
+  }
+  private async resetAwardedProgressiveCounters(jackpots: readonly JackpotTier[], evaluation: WinEvaluation): Promise<void> {
+    const tasks: Promise<void>[] = []
+    if (jackpots.includes('major')) {
+      const award = evaluation.wins.find((win) => win.jackpot === 'major')?.payout ?? MAJOR_SEED
+      tasks.push(this.majorCounter.animate(award, MAJOR_SEED))
+    }
+    if (jackpots.includes('grand')) {
+      const award = evaluation.wins.find((win) => win.jackpot === 'grand')?.payout ?? GRAND_SEED
+      tasks.push(this.grandCounter.animate(award, GRAND_SEED))
+    }
+    if (tasks.length > 0) await Promise.all(tasks)
   }
   private getContributionAmounts(): { major: number; grand: number } {
     const total = Number((BET * PROGRESSIVE_RATE).toFixed(2))

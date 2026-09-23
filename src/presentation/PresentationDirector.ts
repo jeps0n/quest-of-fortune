@@ -2,6 +2,7 @@ import type { AudioEvent, AudioManager } from '../audio/AudioManager'
 import type { WinEvaluation } from '../game/math/WinEvaluator'
 import type { ReelSet } from '../pixi/reels/ReelSet'
 import type { CharacterWinPresentation } from '../pixi/wins/CharacterWinPresentation'
+import type { JackpotPresentation } from '../pixi/jackpots/JackpotPresentation'
 import type { WinPresentation } from '../pixi/wins/WinPresentation'
 import {
   classifyResult,
@@ -20,15 +21,18 @@ export class PresentationDirector {
   private wins: WinPresentation
   private characterWins: CharacterWinPresentation
   private audio: AudioManager
+  private jackpots: JackpotPresentation
   constructor(
     reels: ReelSet,
     wins: WinPresentation,
     characterWins: CharacterWinPresentation,
+    jackpots: JackpotPresentation,
     audio: AudioManager,
   ) {
     this.reels = reels
     this.wins = wins
     this.characterWins = characterWins
+    this.jackpots = jackpots
     this.audio = audio
   }
   async present(
@@ -94,10 +98,17 @@ export class PresentationDirector {
         )
         await this.wait(0.12)
         await this.wins.stagePulse()
-      } else {
-        await this.reels.presentWins(
-          evaluation.wins,
+      } else if (presentation.kind === 'jackpot') {
+        const jackpotWin = evaluation.wins.find(
+          (win) => win.jackpot === presentation.jackpot,
         )
+        await this.reels.presentWins(evaluation.wins)
+        await this.wait(0.28)
+        if (jackpotWin) {
+          await this.jackpots.celebrate(jackpotWin)
+        }
+      } else {
+        await this.reels.presentWins(evaluation.wins)
       }
     }
     return presentation
@@ -106,6 +117,7 @@ export class PresentationDirector {
     void this.reels.restoreFromStage(0)
     this.wins.clear()
     this.characterWins.clear()
+    this.jackpots.clear()
   }
   private wait(
     seconds: number,

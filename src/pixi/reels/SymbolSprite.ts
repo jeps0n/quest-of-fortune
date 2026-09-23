@@ -10,13 +10,13 @@ import { getSymbolArtwork } from './SymbolAssets'
  * The frame remains programmatic so artwork can be introduced one symbol at a
  * time without changing reel geometry or the symbol animation contract.
  */
-const LOOK: Record<SymbolId, { color: number; label: string; labelColor: number }> = {
+export const SYMBOL_LOOK: Record<SymbolId, { color: number; label: string; labelColor: number }> = {
   SCROLL: { color: 0xd6b45d, label: 'SCROLL', labelColor: 0xffedbd },
   COIN:   { color: 0xf0c94d, label: 'COIN',   labelColor: 0xffed9b },
   RING:   { color: 0xe58a35, label: 'RING',   labelColor: 0xffc77a },
   CHEST:  { color: 0x9b6238, label: 'CHEST',  labelColor: 0xe8bd82 },
-  GEM:    { color: 0xe8dfc7, label: 'GEM',    labelColor: 0xfff7e8 },
   CROWN:  { color: 0xd99b28, label: 'CROWN',  labelColor: 0xffd76c },
+  GEM:    { color: 0xe8dfc7, label: 'GEM',    labelColor: 0xfff7e8 },
   ARCHER: { color: 0x43b85f, label: 'ARCHER', labelColor: 0x9df0ad },
   KNIGHT: { color: 0xd34f4f, label: 'KNIGHT', labelColor: 0xffa2a2 },
   MAGE:   { color: 0x4388dc, label: 'MAGE',   labelColor: 0x9ecaff },
@@ -64,7 +64,7 @@ export class SymbolSprite {
     this.draw()
   }
   private draw(): void {
-    const look = LOOK[this.id]
+    const look = SYMBOL_LOOK[this.id]
     const texture = getSymbolArtwork(this.id)
     this.drawFrame(look.color)
     this.label.text = look.label

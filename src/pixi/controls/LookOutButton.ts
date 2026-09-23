@@ -28,7 +28,7 @@ export function createLookOutButton({
     style: {
       fill: 0xf6e7bb,
       fontFamily: 'Georgia, Times New Roman, serif',
-      fontSize: 10,
+      fontSize: 11,
       fontWeight: '700',
       letterSpacing: 1.05,
     },
@@ -69,37 +69,37 @@ export function createLookOutButton({
     face
       .roundRect(1, 1, layout.width - 2, layout.height - 2, CORNER_RADIUS)
       .fill({
-        color: active ? 0x2d1745 : 0x1d122b,
-        alpha: disabled ? 0.48 : hovered ? 0.84 : 0.72,
+        color: active ? 0x462039 : 0x2d1727,
+        alpha: disabled ? 0.48 : hovered ? 0.92 : 0.80,
       })
     // Restrained upper bevel gives the plate depth without a CSS-like glow.
     innerLine
       .moveTo(12, 4)
       .lineTo(layout.width - 12, 4)
       .stroke({
-        color: active ? 0xb981d5 : 0x8f6a9f,
-        alpha: disabled ? 0.10 : hovered ? 0.32 : 0.18,
+        color: active ? 0xf0b3dc : 0xd69ab9,
+        alpha: disabled ? 0.10 : hovered ? 0.48 : 0.30,
         width: 1,
       })
     border
       .roundRect(1.5, 1.5, layout.width - 3, layout.height - 3, CORNER_RADIUS - 0.5)
       .stroke({
-        color: disabled ? 0x8f846c : hovered ? 0xf0ce73 : 0xc9a650,
-        alpha: disabled ? 0.38 : hovered ? 0.94 : 0.76,
-        width: hovered ? 1.25 : 1,
+        color: disabled ? 0x8f846c : hovered ? 0xffdda0 : 0xd8b96d,
+        alpha: disabled ? 0.38 : hovered ? 1 : 0.88,
+        width: hovered ? 1.35 : 1.1,
       })
     // Tiny ornamental ticks make it read as a game control without changing
     // the locked hit box or surrounding layout.
-    const tickColor = disabled ? 0x8f846c : 0xd7b75e
-    const tickAlpha = disabled ? 0.24 : hovered ? 0.82 : 0.56
+    const tickColor = disabled ? 0x8f846c : 0xe2c476
+    const tickAlpha = disabled ? 0.24 : hovered ? 0.92 : 0.68
     border
       .moveTo(7, layout.height / 2)
       .lineTo(11, layout.height / 2)
       .moveTo(layout.width - 11, layout.height / 2)
       .lineTo(layout.width - 7, layout.height / 2)
       .stroke({ color: tickColor, alpha: tickAlpha, width: 1 })
-    label.alpha = disabled ? 0.40 : 0.96
-    label.style.fill = disabled ? 0xb8aa89 : active ? 0xf4d77d : 0xf6e7bb
+    label.alpha = disabled ? 0.40 : 1
+    label.style.fill = disabled ? 0xb8aa89 : active ? 0xffe4f5 : hovered ? 0xfff3d8 : 0xf8e9c5
   }
   const drawLockVeil = (progress: number): void => {
     lockVeil.clear()

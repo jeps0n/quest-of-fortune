@@ -1,5 +1,6 @@
 import { SYMBOL_IDS, type SymbolId } from '../game/math/SpinResult'
-import { REEL_GENERATION_INPUT } from './ReelGenerationInput'
+import { type ReelComposition } from './ReelGenerationInput'
+import { CHALLENGER_GENERATION_INPUT, CHALLENGER_HIGH_DISTRIBUTION, CHALLENGER_PROFILE_SEARCH_SECONDS, CHALLENGER_REEL_LENGTH, CHALLENGER_RTP_SUMMARY, CHALLENGER_TARGET_SUMMARY, isLeftWeightedHighCounts, type HighSymbolDistribution } from './ReelTargetProfile'
 /**
  * QUEST OF FORTUNE — REEL SEQUENCE OPTIMIZER
  *
@@ -8,12 +9,12 @@ import { REEL_GENERATION_INPUT } from './ReelGenerationInput'
  * WORKFLOW
  * 1. Configure sequencing constraints in this tool.
  * 2. Run: npm run reels:generate
- * 3. Generate five deterministic 200-stop candidate reels.
+ * 3. Generate five deterministic equal-length candidate reels.
  * 4. Require structural and reel-set validation to pass.
  * 5. Print a reel-derived Candidate ID and copy/paste-ready REEL_STRIPS.
  * 6. Manually paste an accepted candidate into SpinResult.ts.
- * 7. Run npm run math:quick.
- * 8. If the candidate is promising, run the full npm run math simulation.
+ * 7. Run npm run math:cand:quick.
+ * 8. If the candidate is promising, run the full npm run math:cand simulation.
  * 9. Adjust sequencing constraints and repeat until the math is accepted.
  * 10. Freeze the accepted strips as production math.
  *
@@ -31,7 +32,7 @@ import { REEL_GENERATION_INPUT } from './ReelGenerationInput'
  * IMPORTANT
  * - This tool never writes to SpinResult.ts or any other production file.
  * - This tool never performs Git operations.
- * - REEL_GENERATION_INPUT is the frozen source recipe for the currently accepted production reels.
+ * - REEL_GENERATION_INPUT is a count-only composition form; source reel ordering is not generation input.
  * - SpinResult.ts is output-only: promoting a candidate cannot feed production ordering back into generation.
  * - Change generation input/configuration only when intentionally starting a new tuning cycle.
  * - Reel order matters: sequencing is part of the game's math.
@@ -42,9 +43,9 @@ import { REEL_GENERATION_INPUT } from './ReelGenerationInput'
 // -----------------------------------------------------------------------------
 // OPTIMIZER CONFIGURATION — PRIMARY TUNING AREA
 // -----------------------------------------------------------------------------
-const OPTIMIZER_SEED = 0x514f46
-const CANDIDATES_PER_REEL = 500
-const MAX_ATTEMPTS_PER_REEL = 20_000
+const OPTIMIZER_SEED = 0x47454D // GEM
+const CANDIDATES_PER_REEL = 750
+const MAX_ATTEMPTS_PER_REEL = 30_000
 const PROGRESS_STEPS = 20
 const HIGH_SYMBOLS: readonly SymbolId[] = ['ARCHER', 'KNIGHT', 'MAGE', 'DRAGON']
 const PERIODIC_OFFSETS = [10, 20, 25, 40, 50] as const
@@ -57,49 +58,9 @@ const PERIODIC_OFFSETS = [10, 20, 25, 40, 50] as const
 //
 // LOW symbols fill every remaining stop using exact production counts and the
 // existing 4-stop window caps below.
-interface HighSymbolDistribution {
-  oneGapClusters: number
-  twoGapClusters: number
-}
-// Configured per HIGH, left-to-right across Reels 1–5. Start by moving all five
-// reels together; use reel weighting only when a full-reel move is too coarse.
-// oneGapClusters and twoGapClusters explicitly define the same-symbol cluster
-// structure. Remaining copies are derived as isolated occurrences.
-const HIGH_SYMBOL_DISTRIBUTION: Readonly<
-  Record<'ARCHER' | 'KNIGHT' | 'MAGE' | 'DRAGON', readonly HighSymbolDistribution[]>
-> = {
-  ARCHER: [
-    { oneGapClusters: 2, twoGapClusters: 0 }, // R1
-    { oneGapClusters: 1, twoGapClusters: 1 }, // R2
-    { oneGapClusters: 1, twoGapClusters: 1 }, // R3
-    { oneGapClusters: 0, twoGapClusters: 1 }, // R4
-    { oneGapClusters: 0, twoGapClusters: 1 }, // R5
-  ],
-  KNIGHT: [
-    { oneGapClusters: 1, twoGapClusters: 0 }, // R1
-    { oneGapClusters: 1, twoGapClusters: 0 }, // R2
-    { oneGapClusters: 1, twoGapClusters: 0 }, // R3
-    { oneGapClusters: 0, twoGapClusters: 1 }, // R4
-    { oneGapClusters: 0, twoGapClusters: 1 }, // R5
-  ],
-  MAGE: [
-    { oneGapClusters: 1, twoGapClusters: 0 }, // R1
-    { oneGapClusters: 1, twoGapClusters: 0 }, // R2
-    { oneGapClusters: 1, twoGapClusters: 0 }, // R3
-    { oneGapClusters: 0, twoGapClusters: 1 }, // R4
-    { oneGapClusters: 0, twoGapClusters: 1 }, // R5
-  ],
-  DRAGON: [
-    { oneGapClusters: 1, twoGapClusters: 0 }, // R1
-    { oneGapClusters: 0, twoGapClusters: 1 }, // R2
-    { oneGapClusters: 0, twoGapClusters: 1 }, // R3
-    { oneGapClusters: 0, twoGapClusters: 0 }, // R4
-    { oneGapClusters: 0, twoGapClusters: 0 }, // R5
-  ],
-} as const
 function highSymbolDistribution(symbol: SymbolId, reelIndex: number): HighSymbolDistribution {
   if (!HIGH_SYMBOLS.includes(symbol)) throw new Error(`${symbol} is not a HIGH symbol`)
-  return HIGH_SYMBOL_DISTRIBUTION[symbol as keyof typeof HIGH_SYMBOL_DISTRIBUTION][reelIndex]
+  return CHALLENGER_HIGH_DISTRIBUTION[symbol as keyof typeof CHALLENGER_HIGH_DISTRIBUTION][reelIndex]
 }
 // Maximum copies of each non-jackpot symbol allowed in any circular 4-stop
 // viewport. These caps prevent extreme local bundling without evenly spacing
@@ -156,19 +117,29 @@ function shuffled<T>(source: readonly T[], random: () => number): T[] {
 // Build in two deliberate passes: HIGH-symbol structure first, LOW-symbol fill second.
 // Each HIGH is placed independently against its configured cluster profile. This avoids
 // asking a blind full-reel shuffle to discover the requested structure by accident.
+function isCloseHighGap(gap: number): boolean {
+  return gap === 2 || gap === 3
+}
+function hasChainedCloseGaps(gaps: readonly number[]): boolean {
+  if (gaps.length < 2) return false
+  return gaps.some((gap, index) => isCloseHighGap(gap) && isCloseHighGap(gaps[(index + 1) % gaps.length]))
+}
 function highDistributionMatches(positions: readonly number[], length: number, config: HighSymbolDistribution): boolean {
   const sorted = [...positions].sort((a, b) => a - b)
   let oneGapClusters = 0
   let twoGapClusters = 0
+  const gaps: number[] = []
   for (let index = 0; index < sorted.length; index += 1) {
     const current = sorted[index]
     const next = sorted[(index + 1) % sorted.length]
     const gap = (next - current + length) % length
+    gaps.push(gap)
     if (gap === 1) return false
     if (gap === 2) oneGapClusters += 1
     if (gap === 3) twoGapClusters += 1
     if (gap < 4 && gap !== 2 && gap !== 3) return false
   }
+  if (hasChainedCloseGaps(gaps)) return false
   return oneGapClusters === config.oneGapClusters && twoGapClusters === config.twoGapClusters
 }
 function placeHighSymbol(
@@ -187,21 +158,34 @@ function placeHighSymbol(
   }
   return undefined
 }
-function generateHighLowDistribution(reference: readonly SymbolId[], reelIndex: number, random: () => number): SymbolId[] | undefined {
-  const counts = symbolCounts(reference)
-  const strip = Array<SymbolId | undefined>(reference.length).fill(undefined)
+function compositionLength(composition: ReelComposition): number {
+  return SYMBOL_IDS.reduce((total, symbol) => total + composition[symbol], 0)
+}
+function expandLowComposition(composition: ReelComposition): SymbolId[] {
+  const lows: SymbolId[] = []
+  // SYMBOL_IDS is the canonical expansion order. The input object's property
+  // insertion order therefore cannot become hidden generator entropy.
+  for (const symbol of SYMBOL_IDS) {
+    if (HIGH_SYMBOLS.includes(symbol)) continue
+    for (let copy = 0; copy < composition[symbol]; copy += 1) lows.push(symbol)
+  }
+  return lows
+}
+function generateHighLowDistribution(composition: ReelComposition, reelIndex: number, random: () => number): SymbolId[] | undefined {
+  const length = compositionLength(composition)
+  const strip = Array<SymbolId | undefined>(length).fill(undefined)
   const occupied = new Set<number>()
   // Randomize which HIGH gets first choice of positions so mixed-HIGH
   // interleaving remains natural rather than inheriting a fixed placement bias.
   for (const symbol of shuffled(HIGH_SYMBOLS, random)) {
-    const positions = placeHighSymbol(counts.get(symbol) ?? 0, reference.length, occupied, random, highSymbolDistribution(symbol, reelIndex))
+    const positions = placeHighSymbol(composition[symbol], length, occupied, random, highSymbolDistribution(symbol, reelIndex))
     if (!positions) return undefined
     for (const position of positions) {
       strip[position] = symbol
       occupied.add(position)
     }
   }
-  const lows = shuffled(reference.filter((symbol) => !HIGH_SYMBOLS.includes(symbol)), random)
+  const lows = shuffled(expandLowComposition(composition), random)
   let lowIndex = 0
   for (let index = 0; index < strip.length; index += 1) {
     if (strip[index] === undefined) {
@@ -312,7 +296,9 @@ function hasValidWindowComposition(strip: readonly SymbolId[]): boolean {
   // Matching HIGHs can cluster, but never directly (AA) and never 3+ in the
   // same visible 4-stop viewport.
   for (const symbol of HIGH_SYMBOLS) {
-    if (circularGaps(strip, symbol).some((gap) => gap === 1)) return false
+    const gaps = circularGaps(strip, symbol)
+    if (gaps.some((gap) => gap === 1)) return false
+    if (hasChainedCloseGaps(gaps)) return false
     for (let start = 0; start < strip.length; start += 1) {
       if (countSymbolInWindow(strip, start, symbol) > 2) return false
     }
@@ -355,8 +341,36 @@ function highSpacingPenalty(strip: readonly SymbolId[]): number {
   }
   return penalty
 }
+function highClusterBalancePenalty(strip: readonly SymbolId[]): number {
+  let penalty = 0
+  for (const symbol of HIGH_SYMBOLS) {
+    const positions: number[] = []
+    for (let index = 0; index < strip.length; index += 1) {
+      if (strip[index] === symbol) positions.push(index)
+    }
+    const centers: number[] = []
+    for (let index = 0; index < positions.length; index += 1) {
+      const current = positions[index]
+      const next = positions[(index + 1) % positions.length]
+      const gap = (next - current + strip.length) % strip.length
+      if (isCloseHighGap(gap)) centers.push((current + gap / 2) % strip.length)
+    }
+    if (centers.length <= 1) continue
+    centers.sort((a, b) => a - b)
+    const idealSpacing = strip.length / centers.length
+    for (let index = 0; index < centers.length; index += 1) {
+      const current = centers[index]
+      const next = index === centers.length - 1 ? centers[0] + strip.length : centers[index + 1]
+      const normalizedDeviation = (next - current - idealSpacing) / idealSpacing
+      penalty += normalizedDeviation * normalizedDeviation
+    }
+  }
+  return penalty
+}
 function sequenceScore(strip: readonly SymbolId[]): number {
-  let score = highSpacingPenalty(strip)
+  // Prefer close HIGH relationships that are spread around the circular reel.
+  // Exact equidistance is intentionally soft; legality remains a hard constraint.
+  let score = highSpacingPenalty(strip) + highClusterBalancePenalty(strip)
   // LOW / filler texture: doubles are natural. Triples are allowed by the hard
   // window rules, so only exact three-in-a-row runs receive a mild penalty.
   for (let index = 0; index < strip.length; index += 1) {
@@ -379,26 +393,27 @@ function sequenceScore(strip: readonly SymbolId[]): number {
 }
 // -----------------------------------------------------------------------------
 // STRUCTURAL VALIDATION
-// Candidate strips must preserve exact reference composition and satisfy every
+// Candidate strips must preserve the requested composition and satisfy every
 // circular 4-stop composition rule above.
 // -----------------------------------------------------------------------------
 export function validateReelStrip(
   strip: readonly SymbolId[],
-  reference: readonly SymbolId[],
+  composition: ReelComposition,
   reelIndex?: number,
 ): ValidationResult {
   const errors: string[] = []
-  if (strip.length !== reference.length) errors.push(`length ${strip.length}; expected ${reference.length}`)
-  const expectedCounts = symbolCounts(reference)
+  const expectedLength = compositionLength(composition)
+  if (strip.length !== expectedLength) errors.push(`length ${strip.length}; expected ${expectedLength}`)
   const actualCounts = symbolCounts(strip)
   for (const symbol of SYMBOL_IDS) {
-    const expected = expectedCounts.get(symbol) ?? 0
+    const expected = composition[symbol]
     const actual = actualCounts.get(symbol) ?? 0
     if (actual !== expected) errors.push(`${symbol} count ${actual}; expected ${expected}`)
   }
   for (const symbol of HIGH_SYMBOLS) {
     const gaps = circularGaps(strip, symbol)
     if (gaps.some((gap) => gap === 1)) errors.push(`${symbol} contains prohibited AA adjacency`)
+    if (hasChainedCloseGaps(gaps)) errors.push(`${symbol} contains chained close gaps (2/3 followed by 2/3)`)
     for (let start = 0; start < strip.length; start += 1) {
       const count = countSymbolInWindow(strip, start, symbol)
       if (count > 2) {
@@ -461,7 +476,7 @@ function writeProgress(reelIndex: number, attempts: number, exactCandidates: num
     `Optimizing Reel ${reelIndex + 1}/5 [${String(percent).padStart(3)}%] ${attempts.toLocaleString()} / ${MAX_ATTEMPTS_PER_REEL.toLocaleString()} attempts | exact ${exactCandidates.toLocaleString()} / ${CANDIDATES_PER_REEL.toLocaleString()}`,
   )
 }
-function optimizeReel(reference: readonly SymbolId[], reelIndex: number): Candidate {
+function optimizeReel(composition: ReelComposition, reelIndex: number): Candidate {
   const random = seededRandom((OPTIMIZER_SEED + Math.imul(reelIndex + 1, 0x9e3779b1)) >>> 0)
   let best: Candidate | undefined
   let bestNear: Candidate | undefined
@@ -471,7 +486,7 @@ function optimizeReel(reference: readonly SymbolId[], reelIndex: number): Candid
   let nextProgressStep = 1
   while (attempts < MAX_ATTEMPTS_PER_REEL && exactCandidates < CANDIDATES_PER_REEL) {
     attempts += 1
-    const strip = generateHighLowDistribution(reference, reelIndex, random)
+    const strip = generateHighLowDistribution(composition, reelIndex, random)
     if (strip && hasValidWindowComposition(strip)) {
       const distance = highDistributionDistance(strip, reelIndex)
       const score = sequenceScore(strip)
@@ -506,7 +521,7 @@ function optimizeReel(reference: readonly SymbolId[], reelIndex: number): Candid
   return best
 }
 export function generateOptimizedReelStrips(): SymbolId[][] {
-  return REEL_GENERATION_INPUT.map((reference, reelIndex) => optimizeReel(reference, reelIndex).strip)
+  return CHALLENGER_GENERATION_INPUT.map((composition, reelIndex) => optimizeReel(composition, reelIndex).strip)
 }
 // -----------------------------------------------------------------------------
 // REEL-SET UNIQUENESS VALIDATION
@@ -555,7 +570,7 @@ function reelCandidateId(strips: readonly (readonly SymbolId[])[]): string {
   return `QOF-${hash.toString(16).toUpperCase().padStart(8, '0')}`
 }
 // -----------------------------------------------------------------------------
-// COPY/PASTE OUTPUT — NEVER WRITES TO SpinResult.ts
+// CANDIDATE OUTPUT — COPY/PASTE INTO ReelAuditInput.ts
 // -----------------------------------------------------------------------------
 function formatStrip(strip: readonly SymbolId[]): string {
   const lines: string[] = ['  [']
@@ -567,7 +582,14 @@ function formatStrip(strip: readonly SymbolId[]): string {
   return lines.join('\n')
 }
 function run(): void {
-  const candidates = REEL_GENERATION_INPUT.map((reference, reelIndex) => optimizeReel(reference, reelIndex))
+  console.log('PHYSICAL REEL OPTIMIZATION')
+  console.log('--------------------------')
+  const physicalStartedAt = performance.now()
+  const candidates = CHALLENGER_GENERATION_INPUT.map((composition, reelIndex) => optimizeReel(composition, reelIndex))
+  const physicalSeconds = (performance.now() - physicalStartedAt) / 1000
+  console.log(`Physical reel optimization complete: ${physicalSeconds.toFixed(2)}s`)
+  console.log(`Total generation time: ${(CHALLENGER_PROFILE_SEARCH_SECONDS + physicalSeconds).toFixed(2)}s`)
+  console.log('')
   const strips = candidates.map((candidate) => candidate.strip)
   const candidateId = reelCandidateId(strips)
   console.log('QUEST OF FORTUNE — REEL SEQUENCE OPTIMIZER')
@@ -575,11 +597,26 @@ function run(): void {
   console.log(`Candidate ID: ${candidateId}`)
   console.log(`Seed: 0x${OPTIMIZER_SEED.toString(16).toUpperCase()}`)
   console.log('HIGH Symbol Distribution: one-gap and two-gap clusters configured per HIGH / per reel; remaining copies are isolated')
+  console.log('HIGH Direction: LEFT-WEIGHTED (R1 >= R2 >= R3 >= R4 >= R5)')
+  for (const symbol of HIGH_SYMBOLS) {
+    const counts = CHALLENGER_GENERATION_INPUT.map((composition) => composition[symbol])
+    const status = isLeftWeightedHighCounts(counts) ? 'PASS' : 'FAIL'
+    console.log(`  ${symbol.padEnd(6)} ${counts.join(' -> ')}  ${status}`)
+    if (status !== 'PASS') throw new Error(`${symbol} HIGH counts violate left-weighting.`)
+  }
   console.log(`Exact Candidates / Reel: up to ${CANDIDATES_PER_REEL.toLocaleString()}`)
   console.log(`Attempt Budget / Reel: ${MAX_ATTEMPTS_PER_REEL.toLocaleString()}`)
+  console.log(`Shared Reel Length: ${CHALLENGER_REEL_LENGTH} stops x 5 reels`)
+  console.log('Target-aware challenger profile:')
+  for (const item of CHALLENGER_TARGET_SUMMARY) console.log(`  ${item.symbol.padEnd(6)} 1 / ${item.frequency.toFixed(2)} (target 1 / ${item.target})`)
+  console.log(`  Payline RTP ${CHALLENGER_RTP_SUMMARY.paylineRtp.toFixed(4)}%`)
+  console.log(`  Jackpot RTP ${CHALLENGER_RTP_SUMMARY.jackpotRtp.toFixed(4)}%`)
+  console.log(`  Base RTP    ${CHALLENGER_RTP_SUMMARY.baseRtp.toFixed(4)}% (target ${CHALLENGER_RTP_SUMMARY.targetBaseRtp.toFixed(4)}%)`)
+  console.log('Challenger composition by reel:')
+  CHALLENGER_GENERATION_INPUT.forEach((composition, reelIndex) => console.log(`  R${reelIndex + 1}: ${SYMBOL_IDS.map((symbol) => `${symbol} ${composition[symbol]}`).join(' | ')}`))
   console.log('')
   strips.forEach((strip, reelIndex) => {
-    const validation = validateReelStrip(strip, REEL_GENERATION_INPUT[reelIndex], reelIndex)
+    const validation = validateReelStrip(strip, CHALLENGER_GENERATION_INPUT[reelIndex], reelIndex)
     console.log(`Reel ${reelIndex + 1}: ${validation.valid ? 'VALID' : 'INVALID'} | HIGH spacing penalty ${candidates[reelIndex].highSpacingPenalty.toFixed(4)}`)
     for (const symbol of HIGH_SYMBOLS) {
       const stats = highClusterStats(strip, symbol)
@@ -598,7 +635,7 @@ function run(): void {
     console.log(`  HIGH density (4-stop windows): 0H ${density[0]} | 1H ${density[1]} | 2H ${density[2]} | 3H ${density[3]} | 4H ${density[4]}`)
     if (!validation.valid) console.log(`  ${validation.errors.join('; ')}`)
   })
-  if (strips.some((strip, reelIndex) => !validateReelStrip(strip, REEL_GENERATION_INPUT[reelIndex], reelIndex).valid)) {
+  if (strips.some((strip, reelIndex) => !validateReelStrip(strip, CHALLENGER_GENERATION_INPUT[reelIndex], reelIndex).valid)) {
     throw new Error('Generated strips failed structural validation.')
   }
   const setValidation = validateReelSet(strips)
@@ -607,12 +644,12 @@ function run(): void {
     console.log(`  ${setValidation.errors.join('; ')}`)
     throw new Error('Generated reel set failed uniqueness validation.')
   }
-  console.log('\nCOPY / PASTE INTO SpinResult.ts')
-  console.log('--------------------------------')
+  console.log('\nCANDIDATE REELS — COPY / PASTE INTO src/tools/ReelAuditInput.ts')
+  console.log('============================================================')
   console.log(`// REEL CANDIDATE: ${candidateId}`)
-  console.log('export const REEL_STRIPS: readonly (readonly SymbolId[])[] = [')
+  console.log('export const REEL_STRIPS_TO_AUDIT: readonly (readonly SymbolId[])[] = [')
   strips.forEach((strip, reelIndex) => {
-    console.log(`  // Reel ${reelIndex + 1} — 200 stops`)
+    console.log(`  // Reel ${reelIndex + 1} — ${CHALLENGER_REEL_LENGTH} stops`)
     console.log(formatStrip(strip))
   })
   console.log('] as const')
