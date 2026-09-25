@@ -87,7 +87,7 @@ export class DemoControls {
       boxShadow: '0 12px 32px rgba(0,0,0,0.45)',
     })
     const title = document.createElement('div')
-    title.textContent = 'Demo Spin Controls'
+    title.textContent = 'Developer Outcome Controls'
     Object.assign(title.style, { fontWeight: '700', fontSize: '15px', marginBottom: '10px' })
     const hint = document.createElement('div')
     Object.assign(hint.style, {

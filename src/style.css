@@ -46,18 +46,18 @@ body {
   user-select: none;
 }
 .signature-credit {
-  color: rgba(245, 238, 255, 0.82);
+  color: rgba(245, 238, 255, 0.64);
   font-size: 10px;
   letter-spacing: 0.04em;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
 }
 .signature-credit strong {
-  color: rgba(255, 222, 145, 0.95);
+  color: rgba(255, 178, 72, 0.64);
   font-weight: 600;
 }
 .tech-stack {
   margin-top: 2px;
-  color: rgba(105, 205, 225, 0.78);
+  color: rgba(105, 205, 225, 0.64);
   font-size: 8px;
   letter-spacing: 0.075em;
 }
