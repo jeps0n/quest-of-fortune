@@ -4,6 +4,9 @@ interface StageScalerElements {
   viewport: HTMLElement
   stage: HTMLElement
 }
+// Scale the authored logical stage as one unit rather than independently
+// reflowing cabinet geometry. The <= 1 clamp preserves source-pixel sharpness on
+// large displays and keeps math-to-display coordinates stable at every size.
 export function createStageScaler({
   viewport,
   stage,

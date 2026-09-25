@@ -30,7 +30,6 @@ export const PAYLINE_DEFINITIONS: readonly PaylineDefinition[] = [
   { name: 'The Downfall', rows: [0, 0, 1, 2, 3] },
   { name: 'The Uprising', rows: [3, 3, 2, 1, 0] },
 ] as const
-// Existing math/presentation consumers keep the same PAYLINES shape.
 export const PAYLINES: readonly (readonly number[])[] = PAYLINE_DEFINITIONS.map(
   ({ rows }) => rows,
 )

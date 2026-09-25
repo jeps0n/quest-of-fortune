@@ -130,7 +130,7 @@ export class SymbolSprite {
     const verticalScale = Math.min(maxWidth / textureWidth, maxHeight / textureHeight)
     const horizontalScale = maxWidth / textureWidth
     const artCenterY = ART_TOP_PADDING + maxHeight / 2
-    // Preserve the existing vertical composition while reclaiming only the
+    // Preserve vertical composition while reclaiming only the
     // unused horizontal space beneath the foreground frame rails.
     this.artwork.scale.set(horizontalScale, verticalScale)
     this.artwork.position.set(this.width / 2, artCenterY)

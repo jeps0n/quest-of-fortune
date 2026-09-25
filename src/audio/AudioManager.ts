@@ -1,8 +1,5 @@
 export type AudioCue = 'win-recognized'
-/**
- * Presentation-only audio service. Quest of Fortune currently ships with one
- * intentional gameplay cue, while the manager remains reusable for future clips.
- */
+/** Presentation-only audio service keyed by semantic gameplay cues. */
 export class AudioManager {
   private clips = new Map<AudioCue, HTMLAudioElement>()
   private volume = 0.50

@@ -13,6 +13,9 @@ const SYMBOL_TEXT_COLORS: Partial<Record<SymbolId, string>> = {
   DRAGON: '#c88cff',
 }
 const DEFAULT_SYMBOL_TEXT_COLOR = '#f5f1e8'
+// Developer-only UI for selecting the presentation of the next spin. It arms
+// SpinOverride; it does not introduce a separate runtime spin type or alter the
+// normal game pipeline after the one-shot selection is consumed.
 export class DemoControls {
   private readonly spinOverride: SpinOverride
   private readonly root: HTMLDivElement
@@ -65,6 +68,8 @@ export class DemoControls {
     this.unsubscribeArmed()
     this.root.remove()
   }
+  // The panel is built imperatively so development controls remain isolated from
+  // the production cabinet DOM/CSS and can be removed without affecting game UI.
   private build(): void {
     this.root.hidden = true
     Object.assign(this.root.style, {
@@ -157,6 +162,8 @@ export class DemoControls {
     this.syncSymbolColor()
     this.renderStatus()
   }
+  // Validate the current controls before translating them into a one-shot
+  // SpinOverride selection consumed by Game on the next spin.
   private arm(): void {
     const mode = this.modeSelect.value as SpinOverrideMode
     const symbol = this.symbolSelect.value as SymbolId
@@ -172,6 +179,7 @@ export class DemoControls {
     })
     this.renderStatus()
   }
+  // Editing controls while already armed updates that pending selection in place.
   private syncArmedSelection(): void {
     if (!this.spinOverride.selection) return
     this.arm()

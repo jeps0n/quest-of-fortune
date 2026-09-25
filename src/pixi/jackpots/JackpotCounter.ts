@@ -1,5 +1,7 @@
 import { gsap } from 'gsap'
 const money = (value: number): string => `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+// DOM-backed meter presenter. `animate` interpolates display text only; callers
+// remain responsible for deciding the actual jackpot value and reset semantics.
 export class JackpotCounter {
   private element: HTMLElement
   constructor(element: HTMLElement) { this.element = element }

@@ -38,6 +38,9 @@ export class Game {
     this.hudValues = new HudValuePresentation(hud.balance, hud.win)
     this.hudValues.setBalance(this.balance)
   }
+  // Owns the runtime transaction boundary for a spin: obtain/construct the result,
+  // present the wager and progressive contribution, resolve awards, then reconcile
+  // the UI to the authoritative jackpot snapshot before returning to idle.
   async spin(): Promise<void> {
     if (!this.state.canSpin) return
     this.state.set('spinning')
@@ -68,6 +71,8 @@ export class Game {
     this.balance = Number((this.balance - BET).toFixed(2))
     this.hudValues.setBalance(this.balance, 'wager')
     const contribution = this.getContributionAmounts()
+    // Progressive meters visually receive this wager's contribution before the
+    // result resolves, so a progressive award includes the current spin's share.
     await this.previewContribution(contribution.major, contribution.grand)
     await this.reels.resetSymbols()
     await this.reels.spin(result)
@@ -93,6 +98,8 @@ export class Game {
     this.hud.message.textContent = this.buildSpinMessage(evaluation, contribution.major, contribution.grand, jackpotLabels)
     this.finish()
   }
+  // Demo selections bypass the server, so they reproduce the same contribution-
+  // before-payout/reset semantics locally without changing the production path.
   private async resolveJackpotAwards(
     evaluation: WinEvaluation,
     majorContribution: number,
@@ -172,6 +179,8 @@ export class Game {
       this.grandCounter.animate(grandFrom, Number((grandFrom + grand).toFixed(2))),
     ])
   }
+  // Commit the locally previewed contribution only for a demo selection. A hit
+  // progressive has already paid its post-contribution value and returns to seed.
   private async settleDemoContribution(major: number, grand: number, jackpots: readonly JackpotTier[]): Promise<void> {
     if (major <= 0 && grand <= 0) return
     const before = this.jackpots

@@ -1,5 +1,7 @@
 import { gsap } from 'gsap'
 const money = (value: number): string => `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+// Owns transient HUD emphasis only. Game supplies the authoritative numeric
+// values; this class formats and animates them without retaining game state.
 export class HudValuePresentation {
   private readonly balanceElement: HTMLElement
   private readonly winElement: HTMLElement

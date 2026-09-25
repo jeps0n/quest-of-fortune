@@ -10,6 +10,9 @@ export interface AuthoritativeSpinResponse {
   majorValue: number
   grandValue: number
 }
+// Production spins cross a single authority boundary here. The client receives
+// both the landed symbols and their evaluated awards; it does not re-roll or
+// reinterpret a successful server response before presentation.
 export async function requestAuthoritativeSpin(): Promise<AuthoritativeSpinResponse> {
   const { data, error } = await supabase.functions.invoke<AuthoritativeSpinResponse>('spin', {
     body: {},

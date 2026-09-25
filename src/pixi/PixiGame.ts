@@ -25,6 +25,9 @@ import { SpinOverride } from '../dev/SpinOverride'
 import { DemoControls } from '../dev/DemoControls'
 export interface PixiGame { app: Application; layers: GameLayers; destroy: () => void }
 interface CreatePixiGameOptions { host: HTMLElement; presentation: HTMLElement; jackpots: JackpotState; jackpotCards: Record<'mini' | 'minor' | 'major' | 'grand', HTMLElement>; majorElement: HTMLElement; grandElement: HTMLElement; messageElement: HTMLElement; winElement: HTMLElement; balanceElement: HTMLElement }
+// Composition root for the Pixi presentation layer. Concrete views/controllers
+// are wired here so Game and the individual presentation classes stay focused on
+// behavior rather than application bootstrapping.
 export async function createPixiGame(options: CreatePixiGameOptions): Promise<PixiGame> {
   const app = new Application()
   await app.init({ width: QUEST_LAYOUT.stage.width, height: QUEST_LAYOUT.stage.height, backgroundAlpha: 0, antialias: true, resolution: window.devicePixelRatio || 1, autoDensity: true })
@@ -39,6 +42,8 @@ export async function createPixiGame(options: CreatePixiGameOptions): Promise<Pi
   const paylinesTexture = await Assets.load('assets/cabinet/quest-paylines.png')
   const paytableTexture = await Assets.load('assets/cabinet/quest-paytable.png')
   await loadSymbolArtwork()
+  // Stable stage layers define draw order once; features add their views to the
+  // appropriate layer instead of managing global z-order themselves.
   const layers = createGameLayers(app.stage)
   const audio = new AudioManager()
   audio.load('win-recognized', 'assets/audio/qof-win-chime.mp3')
@@ -65,6 +70,8 @@ export async function createPixiGame(options: CreatePixiGameOptions): Promise<Pi
   let isInfoOpen = false
   const spinButton = createSpinButton(() => { void game?.spin() })
   const unsubscribeSpinArmed = spinOverride.onArmedChange((armed) => spinButton.setArmed(armed))
+  // Info screens temporarily suppress interactive gameplay layers without
+  // destroying them, preserving reel/presentation state when the player returns.
   const setGameplayLayersVisible = (visible: boolean): void => {
     const alpha = visible ? 1 : 0
     for (const layer of [layers.reels, layers.wins, layers.cabinetFx]) {
@@ -136,6 +143,8 @@ export async function createPixiGame(options: CreatePixiGameOptions): Promise<Pi
   layers.cabinetFx.addChild(contribute.view)
   layers.controls.addChild(spinButton.view, infoButton.view, paytableButton.view, paylinesButton.view, lookOutButton.view)
   game = new Game(reels, spinButton, contribute, majorCounter, grandCounter, presentationDirector, options.jackpots, { message: options.messageElement, win: options.winElement, balance: options.balanceElement }, spinOverride)
+  // Every subsystem created by this composition root is disposed here so a
+  // remount cannot leave listeners, Pixi objects, audio, or GSAP-driven views alive.
   return {
     app,
     layers,

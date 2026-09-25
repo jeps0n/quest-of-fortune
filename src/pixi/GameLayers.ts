@@ -6,6 +6,9 @@ export interface GameLayers {
   cabinetFx: Container
   controls: Container
 }
+// Child order is the rendering contract: later layers draw above earlier ones.
+// Keeping that contract centralized prevents individual features from relying on
+// ad-hoc zIndex values or re-parenting each other during presentation.
 export function createGameLayers(stage: Container): GameLayers {
   const layers: GameLayers = {
     reels: new Container({ label: 'reels' }),

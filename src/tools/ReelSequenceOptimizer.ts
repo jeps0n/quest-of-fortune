@@ -11,8 +11,8 @@ import { CHALLENGER_GENERATION_INPUT, CHALLENGER_HIGH_DISTRIBUTION, CHALLENGER_P
  * 2. Run: npm run reels:generate
  * 3. Generate five deterministic equal-length candidate reels.
  * 4. Require structural and reel-set validation to pass.
- * 5. Print a reel-derived Candidate ID and copy/paste-ready REEL_STRIPS.
- * 6. Manually paste an accepted candidate into SpinResult.ts.
+ * 5. Print a reel-derived Candidate ID and candidate REEL_STRIPS.
+ * 6. Promote an accepted candidate into SpinResult.ts.
  * 7. Run npm run math:cand:quick.
  * 8. If the candidate is promising, run the full npm run math:cand simulation.
  * 9. Adjust sequencing constraints and repeat until the math is accepted.
@@ -57,7 +57,7 @@ const PERIODIC_OFFSETS = [10, 20, 25, 40, 50] as const
 // Remaining copies are isolated occurrences. Different HIGH symbols may interleave.
 //
 // LOW symbols fill every remaining stop using exact production counts and the
-// existing 4-stop window caps below.
+// configured 4-stop window caps below.
 function highSymbolDistribution(symbol: SymbolId, reelIndex: number): HighSymbolDistribution {
   if (!HIGH_SYMBOLS.includes(symbol)) throw new Error(`${symbol} is not a HIGH symbol`)
   return CHALLENGER_HIGH_DISTRIBUTION[symbol as keyof typeof CHALLENGER_HIGH_DISTRIBUTION][reelIndex]

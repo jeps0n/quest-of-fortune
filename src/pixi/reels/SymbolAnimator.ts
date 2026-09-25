@@ -3,7 +3,7 @@ import { gsap } from 'gsap'
 type SymbolBeat = 'idle' | 'win' | 'bigWin' | 'dim' | 'reset'
 /**
  * Presentation-only symbol motion. Reel geometry never moves: every beat acts
- * on the centered QuestSymbol container and always resolves back to scale 1.
+ * on the centered symbol container and always resolves back to scale 1.
  */
 export class SymbolAnimator {
   private view: Container

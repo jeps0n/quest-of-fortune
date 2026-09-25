@@ -1,6 +1,8 @@
 import { Container, Graphics } from 'pixi.js'
 import { gsap } from 'gsap'
 import { QUEST_LAYOUT } from '../../config/QuestLayout'
+// Pure presentation of the per-spin progressive contribution. The flying orbs
+// never mutate jackpot values; Game/JackpotCounter handle the meter transaction.
 export class ContributeAnimation {
   readonly view = new Container({ label: 'contribute-animation' })
   async play(majorAmount: number, grandAmount: number): Promise<void> {

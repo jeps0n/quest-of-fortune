@@ -3,6 +3,8 @@ import { loadJackpots, type JackpotState } from './data/JackpotRepository'
 import { createStageScaler } from './ui/StageScaler'
 import { createPixiGame } from './pixi/PixiGame'
 import { StartupPresentation } from './presentation/StartupPresentation'
+// These seeds keep the cabinet renderable if the initial shared-meter read fails;
+// they are a startup display fallback, not an alternate source of spin authority.
 const FALLBACK_JACKPOTS: JackpotState = { majorValue: 100, grandValue: 500 }
 const money = (value: number): string => `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 const preloadImage = (src: string): Promise<void> => new Promise((resolve) => {
@@ -11,6 +13,9 @@ const preloadImage = (src: string): Promise<void> => new Promise((resolve) => {
   image.onerror = () => resolve()
   image.src = src
 })
+// Bootstrap deliberately separates DOM/cabinet setup from Pixi composition.
+// Static cabinet/HUD elements remain accessible HTML while reels, controls, and
+// win theatre are mounted into the transparent Pixi layer above them.
 async function loadGame(): Promise<void> {
   const [loadedJackpots] = await Promise.all([
     loadJackpots(),
@@ -25,7 +30,7 @@ async function loadGame(): Promise<void> {
       <section class="message-zone" data-message>READY</section>
       <section class="hud-zone"><div class="hud-item"><span>BALANCE</span><strong data-balance>${money(100)}</strong></div><div class="hud-item"><span>BET</span><strong>${money(1)}</strong></div><div class="hud-item"><span>WIN</span><strong data-win>${money(0)}</strong></div></section>
       <section class="control-zone"><button class="spin-button" disabled aria-hidden="true">SPIN</button></section>
-    </div></div><div class="pixi-layer" aria-hidden="true"></div><div class="startup-magic-layer" aria-hidden="true"><div class="startup-aura-bloom"></div><div class="startup-magic-wipe"></div></div></div></div></main></div>`
+    </div></div><div class="pixi-layer" aria-hidden="true"></div><div class="startup-magic-layer" aria-hidden="true"><div class="startup-aura-bloom"></div><div class="startup-magic-wipe"></div></div></div></div></main></div><footer class="developer-signature" aria-label="Technical demonstration by jeff samson. Built with TypeScript, PixiJS, GSAP, Vite, and Supabase."><div class="signature-credit">TECHNICAL DEMONSTRATION BY <strong>jeff samson</strong></div><div class="tech-stack">TYPESCRIPT · PIXIJS · GSAP · VITE · SUPABASE</div></footer>`
   createStageScaler({ viewport: document.querySelector<HTMLDivElement>('.stage-viewport')!, stage: document.querySelector<HTMLElement>('.game-stage')! })
   const startupPresentation = new StartupPresentation(
     document.querySelector<HTMLElement>('.cabinet-motion')!,

@@ -3,6 +3,8 @@ import { REEL_STRIPS_TO_AUDIT } from './ReelAuditInput'
 import { evaluateWins, type JackpotTier } from '../game/math/WinEvaluator'
 import { PAYLINES as PAYLINES_FOR_EXACT } from '../game/math/Paylines'
 import { PAYTABLE as PAYTABLE_FOR_EXACT } from '../game/math/Paytable'
+// Offline verification tool: Monte Carlo and exact calculations measure the
+// configured reel math. This module is not imported by the runtime spin path.
 const DEFAULT_SPINS = 5_000_000
 const QUICK_SPINS = 100_000
 const BET_PER_SPIN = 1
@@ -33,6 +35,8 @@ interface SimulationStats {
   jackpotHits: Record<JackpotTier, number>
   progressiveContribution: number
 }
+// A deterministic PRNG makes simulation runs reproducible while tuning or
+// comparing reel-strip revisions.
 function seededRandom(seed: number): () => number {
   let state = seed >>> 0
   return () => {
@@ -83,6 +87,8 @@ const JACKPOT_SYMBOLS: Readonly<Record<JackpotTier, SymbolId>> = {
 const JACKPOT_PAYOUTS: Readonly<Record<JackpotTier, number>> = {
   mini: 20, minor: 50, major: 100, grand: 500,
 }
+// Enumerate every stop on a circular strip to derive the exact distribution of
+// visible copies for a symbol, avoiding sampling noise in jackpot calculations.
 function exactWindowCountDistribution(strip: readonly SymbolId[], symbol: SymbolId): number[] {
   const counts = [0, 0, 0, 0, 0]
   for (let stop = 0; stop < strip.length; stop += 1) {
@@ -106,6 +112,8 @@ function exactJackpotProbability(strips: readonly (readonly SymbolId[])[], symbo
   }
   return totalDistribution.slice(5).reduce((sum, probability) => sum + probability, 0)
 }
+// Payline RTP is computed analytically from reel symbol frequencies; the Monte
+// Carlo pass below is retained as an independent behavioral cross-check.
 function exactPaylineRtp(strips: readonly (readonly SymbolId[])[]): number {
   let expectedReturn = 0
 for (let lineIndex = 0; lineIndex < awaitPaylines().length; lineIndex += 1) {
@@ -137,6 +145,8 @@ function exactMath(strips: readonly (readonly SymbolId[])[]): ExactMathStats {
   }
   return { paylineRtp, jackpotRtp, baseRtp: paylineRtp + jackpotRtp, jackpotFrequency }
 }
+// Run the same result/evaluation math used by the game over a deterministic
+// sample and separate payline return from jackpot return for easier diagnosis.
 function simulate(spins: number, reelSource: ReelSource): SimulationStats {
   const random = seededRandom(SEED)
   const stats: SimulationStats = {

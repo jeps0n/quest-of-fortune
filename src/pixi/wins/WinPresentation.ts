@@ -103,7 +103,7 @@ export class WinPresentation {
     const l = QUEST_LAYOUT.reels
     // Jackpot treatment intentionally escapes the ordinary payline language.
     // The frame breathes just outside the reel opening and the symbol halos are
-    // lighter than the old medallions so they do not look clipped into cells.
+    // Keep the markers light enough to read as overlays rather than clipped cell art.
     this.graphics
       .roundRect(l.x - 9, l.y - 9, l.width + 18, l.height + 18, 15)
       .stroke({ color: JACKPOT_COLOR, alpha: 0.18, width: 10 })

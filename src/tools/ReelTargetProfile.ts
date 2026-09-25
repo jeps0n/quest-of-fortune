@@ -2,6 +2,9 @@ import type { SymbolId } from '../game/math/SpinResult'
 import { PAYTABLE } from '../game/math/Paytable'
 import { PAYLINES } from '../game/math/Paylines'
 import { REEL_GENERATION_INPUT, type ReelComposition } from './ReelGenerationInput'
+// Offline search model for deriving candidate reel compositions near the locked
+// RTP and jackpot-frequency targets. Its output feeds generation/audit tooling;
+// runtime spins consume finished reel strips rather than executing this search.
 export interface HighSymbolDistribution { oneGapClusters: number; twoGapClusters: number }
 export type HighSymbol = 'ARCHER' | 'KNIGHT' | 'MAGE' | 'DRAGON'
 const HIGH_SYMBOLS: readonly HighSymbol[] = ['ARCHER', 'KNIGHT', 'MAGE', 'DRAGON']
@@ -64,6 +67,8 @@ interface Variant {
   frequency: number
   structuralCost: number
 }
+// HIGH-symbol inventory may stay flat or decrease left-to-right, but never rise
+// on a later reel. This preserves the intended directional qualification profile.
 export function isLeftWeightedHighCounts(counts: readonly number[]): boolean {
   return counts.length === 5 && counts.every((count, reel) => reel === 0 || counts[reel - 1] >= count)
 }
@@ -102,6 +107,8 @@ function configsForExposure(count: number, exposure: number, baseline: HighSymbo
     return lc - rc
   })
 }
+// Convert cluster topology into probabilities of seeing 0, 1, or 2 copies of a
+// HIGH symbol in the four-row visible window for a single circular reel.
 function reelWindowDistribution(count: number, config: HighSymbolDistribution, reelLength: number): readonly [number, number, number] {
   const doubleWindows = 2 * config.oneGapClusters + config.twoGapClusters
   const singleWindows = 4 * count - 2 * doubleWindows
@@ -109,6 +116,8 @@ function reelWindowDistribution(count: number, config: HighSymbolDistribution, r
   if (zeroWindows < 0 || singleWindows < 0) throw new Error('Invalid theoretical HIGH window distribution')
   return [zeroWindows / reelLength, singleWindows / reelLength, doubleWindows / reelLength]
 }
+// Convolve the per-reel visible-count distributions and measure the probability
+// that five or more matching HIGH symbols are visible across the full window.
 function jackpotFrequency(counts: readonly number[], distribution: readonly HighSymbolDistribution[], reelLength: number): number {
   let total = [1]
   for (let reel = 0; reel < 5; reel++) {
@@ -134,6 +143,8 @@ function jackpotFrequencyScore(symbol: HighSymbol, frequency: number): number {
   const target = TARGET_FREQUENCY[symbol]
   return Math.abs(frequency - target) / target * 100
 }
+// Search only structurally valid variants inside the hard frequency band, then
+// retain the closest candidates so later cross-symbol search remains tractable.
 function variantsFor(symbol: HighSymbol, reelLength: number): Variant[] {
   const baseCount = REEL_GENERATION_INPUT[0][symbol]
   const baseline = BASE_DISTRIBUTION[symbol]
@@ -234,6 +245,8 @@ function lowDeviationCost(compositions: readonly ReelComposition[], baseline: re
   }
   return cost
 }
+// Once HIGH-symbol behavior is fixed, tune only LOW-symbol inventory toward the
+// payline RTP target while minimizing deviation from the baseline composition.
 function lowTune(
   source: readonly ReelComposition[],
   targetPaylineRtp: number,

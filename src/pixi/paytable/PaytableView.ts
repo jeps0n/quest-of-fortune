@@ -21,13 +21,10 @@ const ART_MAX_WIDTH = 169
 const ART_MAX_HEIGHT = 101
 const ART_BORDER_COLOR = 0xd8c9a8
 const ART_BORDER_PADDING = 2
-// Keep the development compass data available without showing it in the
-// finished paytable. Flip this to true whenever reel identity/frequency
-// diagnostics are needed again during development.
+// Optional development overlay for reel identity and frequency diagnostics.
 const SHOW_PAYTABLE_DIAGNOSTICS = false
-// Read left-to-right as NORMAL -> MEDIUM -> RICH while staying inside the
-// cabinet's established lavender/gold language. Color progression replaces
-// extra separators or badges, preserving the cards' whitespace.
+// Read left-to-right as NORMAL -> MEDIUM -> RICH. Color progression carries
+// emphasis without adding separators or badges.
 const COUNT_COLORS = [0x9584ad, 0xc9aef0, 0xf7efff] as const
 const PAYOUT_COLORS = [0xb99b55, 0xf0c85d, 0xfff0ad] as const
 const COUNT_SIZES = [11, 12, 13] as const
@@ -107,8 +104,7 @@ function createSymbolCard(symbol: SymbolId): Container {
   const look = SYMBOL_LOOK[symbol]
   const halfW = CARD_WIDTH / 2
   const halfH = CARD_HEIGHT / 2
-  // One unified card surface. The symbol color belongs to the card itself;
-  // artwork is no longer presented as a framed inset sitting inside it.
+  // Keep symbol identity on the card surface rather than adding a second framed panel.
   const surface = new Graphics()
   surface
     .roundRect(-halfW, -halfH, CARD_WIDTH, CARD_HEIGHT, 12)

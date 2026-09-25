@@ -2,6 +2,8 @@ import { Container, Graphics, Text } from 'pixi.js'
 import { gsap } from 'gsap'
 import { QUEST_LAYOUT } from '../../config/QuestLayout'
 export interface SpinButton { view: Container; setEnabled: (enabled: boolean) => void; setArmed: (armed: boolean) => void; destroy: () => void }
+// The cyan `armed` treatment is presentation feedback for a pending developer
+// selection; activation still invokes the same onSpin callback and runtime path.
 export function createSpinButton(onSpin: () => void): SpinButton {
   const l = QUEST_LAYOUT.spin
   const view = new Container({ label: 'spin-button' })

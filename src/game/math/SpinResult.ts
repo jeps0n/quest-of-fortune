@@ -9,14 +9,12 @@ export interface SpinResult {
   stops?: readonly number[]
 }
 /*
- * Quest of Fortune — locked production reel set QOF-F4B9908F.
- * Every reel contains 200 stops with the locked symbol counts:
- * SCROLL 47, COIN 39, RING 33,  CHEST 22, CROWN 14, GEM 13,
- * ARCHER 11, KNIGHT 9, MAGE 7, DRAGON 5.
- *
- * Promoted after structural audit and 5,000,000-spin INPUT validation.
+ * Production reel set QOF-7D39B3CA. Each reel contains 201 stops; exact
+ * per-reel composition is encoded below and validated by the math tooling.
  */
-// PRODUCTION REEL SET: QOF-7D39B3CA
+// IMPORTANT: strip order is math, not decoration. Reordering symbols while
+// preserving counts changes visible-window adjacency and therefore game behavior.
+// Regenerate/audit strips with the tooling rather than hand-sorting this data.
 export const REEL_STRIPS: readonly (readonly SymbolId[])[] = [
   // Reel 1 — 201 stops
   [

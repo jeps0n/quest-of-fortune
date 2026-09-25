@@ -2,6 +2,8 @@ import type { SymbolId } from '../game/math/SpinResult'
 import { REEL_STRIPS_TO_AUDIT } from './ReelAuditInput'
 import { HISTORICAL_REEL_STRIPS } from './ReelAuditReference'
 import { CHALLENGER_GENERATION_INPUT, CHALLENGER_HIGH_DISTRIBUTION, CHALLENGER_REEL_LENGTH, isLeftWeightedHighCounts } from './ReelTargetProfile'
+// Offline structural audit for reel strips. These checks validate topology and
+// symbol distribution; they do not participate in runtime outcome generation.
 const HIGH_SYMBOLS = ['ARCHER', 'KNIGHT', 'MAGE', 'DRAGON'] as const
 const ALL_SYMBOLS = ['SCROLL', 'COIN', 'RING', 'CHEST', 'CROWN', 'GEM', ...HIGH_SYMBOLS] as const
 const REFERENCE_EXPECTED_COUNTS: Readonly<Record<SymbolId, number>> = {
@@ -20,9 +22,13 @@ interface HighDistributionStats {
   maxIsolatedGap: number | null
   averageIsolatedGap: number | null
 }
+// Reel strips are circular, so the final symbol and first symbol are neighbors.
 function circularGap(from: number, to: number, length: number): number {
   return (to - from + length) % length
 }
+// Classify spacing between copies of a HIGH symbol. Gap 1 is adjacency, gap 2
+// is a one-gap cluster, and gap 3 is a two-gap cluster; remaining copies are
+// treated as isolated for distribution diagnostics.
 function auditHigh(strip: readonly SymbolId[], symbol: HighSymbol): HighDistributionStats {
   const positions: number[] = []
   for (let index = 0; index < strip.length; index += 1) {
@@ -116,6 +122,8 @@ function validateSet(
   })
   return problems
 }
+// Candidate strips must preserve the intended HIGH-symbol cluster topology, not
+// merely match aggregate symbol counts.
 function validateCandidateTopology(reels: readonly (readonly SymbolId[])[]): string[] {
   const problems: string[] = []
   reels.forEach((strip, reelIndex) => {
@@ -136,6 +144,8 @@ function validateCandidateTopology(reels: readonly (readonly SymbolId[])[]): str
 function countSymbol(strip: readonly SymbolId[], symbol: SymbolId): number {
   return strip.reduce((count, item) => count + (item === symbol ? 1 : 0), 0)
 }
+// HIGH counts are intentionally left-weighted so qualifying opportunities do
+// not increase as play moves toward later reels.
 function validateCandidateHighDirection(reels: readonly (readonly SymbolId[])[]): string[] {
   const problems: string[] = []
   for (const symbol of HIGH_SYMBOLS) {

@@ -144,7 +144,7 @@ export class CharacterWinPresentation {
     const l = QUEST_LAYOUT.reels
     this.backdrop = new Sprite(this.textures.ARCHER)
     // The alternate screen owns the cabinet-space offset. Everything inside it
-    // now uses simple local coordinates: (0, 0) is the screen's top-left.
+    // Use screen-local coordinates with (0, 0) at the top-left.
     this.screen.position.set(l.x, l.y)
     this.backdrop.anchor.set(0)
     this.backdrop.position.set(0, 0)
@@ -328,7 +328,7 @@ export class CharacterWinPresentation {
       // No character title or payout is competing with the reveal.
       //
       // The slow push is intentionally restrained:
-      // the generated backdrop is the spectacle now, not procedural
+      // keep the generated backdrop as the primary spectacle rather than procedural
       // character geometry.
       tl.set(
         this.view,
@@ -471,7 +471,7 @@ export class CharacterWinPresentation {
       // BEAT 3 — THE PAYOFF
       // ------------------------------------------------------------
       //
-      // Only now does the multiplier/value answer the character
+      // Reveal the multiplier/value only after the character entrance
       // reveal. It does not arrive simultaneously with the title.
       tl.fromTo(
         this.payout,

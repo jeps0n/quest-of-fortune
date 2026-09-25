@@ -1,9 +1,8 @@
 /* LOCKED 1200 × 800 logical cabinet geometry. */
 const STAGE_WIDTH = 1200
 const STAGE_HEIGHT = 800
-// Keep cabinet-level presentation effects tucked beneath the ornate side rails.
-// This mirrors the established 5% startup-magic viewport, but lives in logical
-// stage coordinates so the boundary scales uniformly on every browser size.
+// Keep cabinet-level effects beneath the side rails in logical stage coordinates
+// so the presentation boundary scales uniformly with the cabinet.
 const PRESENTATION_HORIZONTAL_INSET = STAGE_WIDTH * 0.06
 const PRESENTATION_INSET_TOP = STAGE_HEIGHT * 0.015
 const PRESENTATION_INSET_BOTTOM = STAGE_HEIGHT * 0.025
@@ -21,7 +20,7 @@ export const QUEST_LAYOUT = {
   lookOut: { width: 112, height: 32, right: 192, bottom: 29 },
   info: { width: 112, height: 32, left: 192, bottom: 29 },
   // INFO tabs are centered as one group on the SPIN control's center axis (x = 600).
-  // Y geometry remains locked via the existing bottom/height values.
+  // Preserve vertical geometry while allowing horizontal layout adjustments.
   paytable: { width: 112, height: 32, left: 482, bottom: 29 },
   paylines: { width: 112, height: 32, left: 606, bottom: 29 },
   reels: {

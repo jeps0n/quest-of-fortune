@@ -6,8 +6,8 @@ export type ReelComposition = Readonly<Record<SymbolId, number>>
  * This intentionally describes composition only. Source ordering is not part of
  * the generator contract; ReelSequenceOptimizer.ts owns all sequencing.
  *
- * Pass 2 uses the intended LOW-symbol hierarchy: CROWN is the more common
- * lower-paying LOW and GEM is the less common higher-paying LOW.
+ * LOW-symbol frequency follows payout hierarchy: CROWN is more common,
+ * while the higher-paying GEM is less common.
  */
 export const REEL_GENERATION_INPUT: readonly ReelComposition[] = [
   // Reel 1 — 200 stops

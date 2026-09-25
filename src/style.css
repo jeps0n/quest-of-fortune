@@ -11,11 +11,7 @@ body {
 body {
   min-width: 320px;
   min-height: 100vh;
-  /*
-    The fantasy environment belongs to the browser viewport, not the
-    fixed 1200 × 800 gameplay surface. The Vite base is currently
-    /quest-of-fortune/, so this path works in local dev and GitHub Pages.
-  */
+  /* Keep the environment viewport-owned while the 1200 × 800 game surface scales independently. */
   background-color: #101014;
   background-image: url('/quest-of-fortune/assets/backgrounds/quest-background.png');
   background-position: center;
@@ -33,13 +29,39 @@ body {
   padding: 16px;
   overflow: hidden;
 }
-/*
-  OPTION B FOUNDATION
-  stage-viewport = scaled footprint in the browser
-  game-stage     = fixed 1200 × 800 logical game surface
-  Nothing inside game-stage is responsively reflowed.
-  The entire cabinet scales uniformly as one object.
-*/
+.developer-signature {
+  position: fixed;
+  right: 18px;
+  bottom: 14px;
+  z-index: 30;
+  padding: 5px 8px 4px;
+  background: rgba(6, 6, 10, 0.69);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 6px;
+  text-align: right;
+  line-height: 1.25;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  pointer-events: none;
+  user-select: none;
+}
+.signature-credit {
+  color: rgba(245, 238, 255, 0.82);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+.signature-credit strong {
+  color: rgba(255, 222, 145, 0.95);
+  font-weight: 600;
+}
+.tech-stack {
+  margin-top: 2px;
+  color: rgba(105, 205, 225, 0.78);
+  font-size: 8px;
+  letter-spacing: 0.075em;
+}
+/* The viewport tracks the scaled footprint; the 1200 × 800 stage scales as one fixed composition. */
 .stage-viewport {
   position: relative;
   flex: 0 0 auto;
@@ -79,12 +101,7 @@ body {
   background-repeat: no-repeat;
   pointer-events: none;
 }
-/*
-  Decorative cabinet layer. It sits above the viewport background but below
-  all functional game UI. Keep it inside .game-presentation so LOOK OUT
-  automatically fades the cabinet and gameplay together.
-  When the cabinet asset is ready, set background-image here.
-*/
+/* Keep cabinet artwork inside the presentation layer so LOOK OUT fades the cabinet and gameplay together. */
 .cabinet-art {
   position: absolute;
   inset: 0;
@@ -306,8 +323,12 @@ body {
   }
 }
 /* Pixi owns reel symbols and SPIN presentation; DOM remains geometry-only. */
-.reel-grid { opacity: 0; }
-.spin-button { visibility: hidden; }
+.reel-grid {
+  opacity: 0;
+}
+.spin-button {
+  visibility: hidden;
+}
 /* ---------------- TAB 1: RESULT READABILITY ---------------- */
 /* Message line is both player feedback and the lightweight test readout. */
 .message-zone {
@@ -345,13 +366,13 @@ body {
   border-width: 2px;
   border-radius: 9px;
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.015) 28%, rgba(0,0,0,0.24) 100%),
-    radial-gradient(circle at 50% 0%, rgba(255,255,255,0.08), transparent 58%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.015) 28%, rgba(0, 0, 0, 0.24) 100%),
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.08), transparent 58%),
     rgba(12, 6, 25, 0.9);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.2),
-    inset 0 -5px 12px rgba(0,0,0,0.42),
-    0 3px 8px rgba(0,0,0,0.42);
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -5px 12px rgba(0, 0, 0, 0.42),
+    0 3px 8px rgba(0, 0, 0, 0.42);
 }
 .jackpot-card::before {
   content: '';
@@ -369,7 +390,7 @@ body {
   right: 12%;
   top: 2px;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
   opacity: 0.75;
   pointer-events: none;
 }
@@ -381,7 +402,7 @@ body {
   font-weight: 800;
   letter-spacing: 0.16em;
   color: #f7e3a4;
-  text-shadow: 0 1px 2px #000, 0 0 8px rgba(255,214,104,0.18);
+  text-shadow: 0 1px 2px #000, 0 0 8px rgba(255, 214, 104, 0.18);
 }
 .jackpot-card strong {
   position: relative;
@@ -391,67 +412,90 @@ body {
   font-weight: 800;
   letter-spacing: 0.015em;
   color: #fff7dc;
-  text-shadow: 0 2px 2px rgba(0,0,0,0.9), 0 0 9px currentColor;
-  filter: drop-shadow(0 1px 0 rgba(255,255,255,0.12));
+  text-shadow: 0 2px 2px rgba(0, 0, 0, 0.9), 0 0 9px currentColor;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.12));
 }
 .jackpot-card--grand {
   border-color: #e2a9ff;
   background:
-    linear-gradient(180deg, rgba(255,222,255,0.14), rgba(78,14,103,0.16) 38%, rgba(15,5,29,0.94)),
-    radial-gradient(circle at 50% 0%, rgba(222,118,255,0.24), transparent 62%);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.28), inset 0 -6px 14px rgba(0,0,0,0.48), 0 0 13px rgba(194,77,255,0.28), 0 3px 8px rgba(0,0,0,0.48);
+    linear-gradient(180deg, rgba(255, 222, 255, 0.14), rgba(78, 14, 103, 0.16) 38%, rgba(15, 5, 29, 0.94)),
+    radial-gradient(circle at 50% 0%, rgba(222, 118, 255, 0.24), transparent 62%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), inset 0 -6px 14px rgba(0, 0, 0, 0.48), 0 0 13px rgba(194, 77, 255, 0.28), 0 3px 8px rgba(0, 0, 0, 0.48);
 }
-.jackpot-card--grand .jackpot-label { color: #ffd9ff; }
-.jackpot-card--grand strong { color: #fff4ff; text-shadow: 0 2px 2px #000, 0 0 12px rgba(225,145,255,0.72); }
+.jackpot-card--grand .jackpot-label {
+  color: #ffd9ff;
+}
+.jackpot-card--grand strong {
+  color: #fff4ff;
+  text-shadow: 0 2px 2px #000, 0 0 12px rgba(225, 145, 255, 0.72);
+}
 .jackpot-card--major {
   border-color: #78aaff;
-  background: linear-gradient(180deg, rgba(120,170,255,0.15), rgba(24,47,117,0.18) 40%, rgba(7,10,31,0.94));
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.24), inset 0 -5px 12px rgba(0,0,0,0.46), 0 0 10px rgba(64,124,255,0.22), 0 3px 8px rgba(0,0,0,0.44);
+  background: linear-gradient(180deg, rgba(120, 170, 255, 0.15), rgba(24, 47, 117, 0.18) 40%, rgba(7, 10, 31, 0.94));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24), inset 0 -5px 12px rgba(0, 0, 0, 0.46), 0 0 10px rgba(64, 124, 255, 0.22), 0 3px 8px rgba(0, 0, 0, 0.44);
 }
-.jackpot-card--major .jackpot-label { color: #dbe8ff; }
-.jackpot-card--major strong { color: #f3f7ff; text-shadow: 0 2px 2px #000, 0 0 10px rgba(96,153,255,0.62); }
+.jackpot-card--major .jackpot-label {
+  color: #dbe8ff;
+}
+.jackpot-card--major strong {
+  color: #f3f7ff;
+  text-shadow: 0 2px 2px #000, 0 0 10px rgba(96, 153, 255, 0.62);
+}
 .jackpot-card--mini {
   border-color: #61d39a;
-  background: linear-gradient(180deg, rgba(79,211,147,0.13), rgba(17,78,55,0.16) 40%, rgba(5,24,19,0.94));
+  background: linear-gradient(180deg, rgba(79, 211, 147, 0.13), rgba(17, 78, 55, 0.16) 40%, rgba(5, 24, 19, 0.94));
 }
-.jackpot-card--mini .jackpot-label { color: #c9f4d9; }
-.jackpot-card--mini strong { color: #effff4; text-shadow: 0 2px 2px #000, 0 0 9px rgba(73,214,142,0.5); }
+.jackpot-card--mini .jackpot-label {
+  color: #c9f4d9;
+}
+.jackpot-card--mini strong {
+  color: #effff4;
+  text-shadow: 0 2px 2px #000, 0 0 9px rgba(73, 214, 142, 0.5);
+}
 .jackpot-card--minor {
   border-color: #df7474;
-  background: linear-gradient(180deg, rgba(223,95,95,0.14), rgba(107,25,33,0.16) 40%, rgba(31,7,12,0.94));
+  background: linear-gradient(180deg, rgba(223, 95, 95, 0.14), rgba(107, 25, 33, 0.16) 40%, rgba(31, 7, 12, 0.94));
 }
-.jackpot-card--minor .jackpot-label { color: #ffd1c8; }
-.jackpot-card--minor strong { color: #fff3eb; text-shadow: 0 2px 2px #000, 0 0 9px rgba(231,91,91,0.5); }
+.jackpot-card--minor .jackpot-label {
+  color: #ffd1c8;
+}
+.jackpot-card--minor strong {
+  color: #fff3eb;
+  text-shadow: 0 2px 2px #000, 0 0 9px rgba(231, 91, 91, 0.5);
+}
 .message-zone {
   position: relative;
   border-color: rgba(230, 190, 74, 0.82);
   border-radius: 7px;
   background:
-    linear-gradient(180deg, rgba(45,25,61,0.92), rgba(8,5,16,0.96)),
-    rgba(8,5,16,0.96);
+    linear-gradient(180deg, rgba(45, 25, 61, 0.92), rgba(8, 5, 16, 0.96)),
+    rgba(8, 5, 16, 0.96);
   color: #fff2c4;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -4px 10px rgba(0,0,0,0.42), 0 2px 6px rgba(0,0,0,0.36);
-  text-shadow: 0 1px 2px #000, 0 0 8px rgba(255,215,100,0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -4px 10px rgba(0, 0, 0, 0.42), 0 2px 6px rgba(0, 0, 0, 0.36);
+  text-shadow: 0 1px 2px #000, 0 0 8px rgba(255, 215, 100, 0.16);
 }
-.hud-zone { gap: 26px; padding: 8px 110px; }
+.hud-zone {
+  gap: 26px;
+  padding: 8px 110px;
+}
 .hud-item {
   position: relative;
   isolation: isolate;
-  border: 2px solid rgba(215,177,65,0.82);
+  border: 2px solid rgba(215, 177, 65, 0.82);
   border-radius: 9px;
   background:
-    linear-gradient(180deg, rgba(43,24,58,0.94), rgba(9,6,16,0.97));
+    linear-gradient(180deg, rgba(43, 24, 58, 0.94), rgba(9, 6, 16, 0.97));
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.16),
-    inset 0 -5px 11px rgba(0,0,0,0.46),
-    0 2px 6px rgba(0,0,0,0.38);
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 -5px 11px rgba(0, 0, 0, 0.46),
+    0 2px 6px rgba(0, 0, 0, 0.38);
 }
 .hud-item::before {
   content: '';
   position: absolute;
   inset: 3px;
   z-index: -1;
-  border: 1px solid rgba(255,226,135,0.18);
+  border: 1px solid rgba(255, 226, 135, 0.18);
   border-radius: 5px;
 }
 .hud-item::after {
@@ -461,7 +505,7 @@ body {
   left: 18%;
   right: 18%;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,235,174,0.68), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 235, 174, 0.68), transparent);
 }
 .hud-item span {
   font-family: Georgia, 'Times New Roman', serif;
@@ -479,7 +523,7 @@ body {
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.025em;
   color: #fff3c9;
-  text-shadow: 0 2px 2px #000, 0 0 7px rgba(255,215,102,0.2);
+  text-shadow: 0 2px 2px #000, 0 0 7px rgba(255, 215, 102, 0.2);
 }
 /* ---------------- HUD INTEGRATION PASS ----------------
    The cabinet artwork owns the outer ornament. Live HUD surfaces read as
@@ -489,24 +533,26 @@ body {
   border-width: 1px;
   border-color: rgba(255, 231, 159, 0.34);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.18),
-    inset 0 -5px 12px rgba(0,0,0,0.42),
-    0 2px 5px rgba(0,0,0,0.32);
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -5px 12px rgba(0, 0, 0, 0.42),
+    0 2px 5px rgba(0, 0, 0, 0.32);
 }
 .jackpot-card::before {
   inset: 4px;
   border-color: rgba(255, 231, 159, 0.12);
 }
-.jackpot-card::after { opacity: 0.46; }
+.jackpot-card::after {
+  opacity: 0.46;
+}
 /* GRAND has the shallowest baked opening beneath the title crest. */
 .jackpot-card--grand {
   padding-top: 5px;
-  border-color: rgba(226,169,255,0.46);
+  border-color: rgba(226, 169, 255, 0.46);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.22),
-    inset 0 -5px 12px rgba(0,0,0,0.44),
-    0 0 8px rgba(194,77,255,0.18),
-    0 2px 5px rgba(0,0,0,0.34);
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -5px 12px rgba(0, 0, 0, 0.44),
+    0 0 8px rgba(194, 77, 255, 0.18),
+    0 2px 5px rgba(0, 0, 0, 0.34);
 }
 .jackpot-card--grand .jackpot-label {
   font-size: 17px;
@@ -518,39 +564,47 @@ body {
   font-size: 30px;
   line-height: 0.9;
 }
-.jackpot-card--major { border-color: rgba(120,170,255,0.48); }
-.jackpot-card--mini { border-color: rgba(97,211,154,0.46); }
-.jackpot-card--minor { border-color: rgba(223,116,116,0.46); }
+.jackpot-card--major {
+  border-color: rgba(120, 170, 255, 0.48);
+}
+.jackpot-card--mini {
+  border-color: rgba(97, 211, 154, 0.46);
+}
+.jackpot-card--minor {
+  border-color: rgba(223, 116, 116, 0.46);
+}
 /* The baked gold dividers are the HUD's structural border. */
 .hud-item {
-  border: 1px solid rgba(215,177,65,0.28);
+  border: 1px solid rgba(215, 177, 65, 0.28);
   border-radius: 7px;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.12),
-    inset 0 -5px 11px rgba(0,0,0,0.44),
-    0 1px 4px rgba(0,0,0,0.28);
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -5px 11px rgba(0, 0, 0, 0.44),
+    0 1px 4px rgba(0, 0, 0, 0.28);
 }
 .hud-item::before {
   inset: 3px;
-  border-color: rgba(255,226,135,0.08);
+  border-color: rgba(255, 226, 135, 0.08);
 }
-.hud-item::after { opacity: 0.38; }
+.hud-item::after {
+  opacity: 0.38;
+}
 /* Status/messages are an illuminated information screen, not another frame. */
 .message-zone {
-  border: 1px solid rgba(215,177,65,0.34);
+  border: 1px solid rgba(215, 177, 65, 0.34);
   border-radius: 5px;
   background:
-    linear-gradient(180deg, rgba(43,24,58,0.88), rgba(8,5,16,0.95));
+    linear-gradient(180deg, rgba(43, 24, 58, 0.88), rgba(8, 5, 16, 0.95));
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.10),
-    inset 0 -4px 9px rgba(0,0,0,0.40),
-    0 1px 4px rgba(0,0,0,0.28);
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    inset 0 -4px 9px rgba(0, 0, 0, 0.40),
+    0 1px 4px rgba(0, 0, 0, 0.28);
   color: #fff0bd;
   font-family: Georgia, 'Times New Roman', serif;
   font-size: 14px;
   line-height: 1;
   letter-spacing: 0.055em;
-  text-shadow: 0 1px 2px #000, 0 0 7px rgba(255,215,100,0.14);
+  text-shadow: 0 1px 2px #000, 0 0 7px rgba(255, 215, 100, 0.14);
   text-overflow: ellipsis;
 }
 /* ---------------- HUD MICRO-TUNE ----------------
@@ -558,9 +612,9 @@ body {
    are intentionally tiny and presentation-only.
 */
 /* MINI / MAJOR / MINOR plaques are aligned; lift only their live typography. */
-.jackpot-card--mini > *,
-.jackpot-card--major > *,
-.jackpot-card--minor > * {
+.jackpot-card--mini>*,
+.jackpot-card--major>*,
+.jackpot-card--minor>* {
   transform: translateY(-3px);
 }
 /* GRAND: tuck the live inset below the baked top rail and lower its copy. */
@@ -572,9 +626,18 @@ body {
   transform: translateY(-1px);
 }
 /* BET is the optical anchor; balance/win move outward into their baked bays. */
-.hud-item:first-child  { transform: translateX(-14.5px); } /* BALANCE */
-.hud-item:nth-child(2) { transform: translateX(1.5px);  } /* BET */
-.hud-item:last-child   { transform: translateX(15.5px);  } /* WIN */
+.hud-item:first-child {
+  transform: translateX(-14.5px);
+}
+/* BALANCE */
+.hud-item:nth-child(2) {
+  transform: translateX(1.5px);
+}
+/* BET */
+.hud-item:last-child {
+  transform: translateX(15.5px);
+}
+/* WIN */
 /* ---------------- HUD FRAME REMOVAL ----------------
    Baked cabinet artwork owns the frames/surfaces.
    Live HUD retains typography, glow and optical positioning.
@@ -674,8 +737,7 @@ body {
     inset 0 0 54px rgba(129, 57, 202, 0.13);
   filter: blur(8px);
 }
-/* Slightly broader than the earlier wipe, but still subordinate to the
-   cabinet artwork. The parent clips the diagonal band at every cabinet edge. */
+/* Keep the wipe subordinate to the cabinet artwork and clipped to its bounds. */
 .startup-magic-wipe {
   position: absolute;
   top: -7%;
@@ -705,11 +767,11 @@ body {
   inset: 2% 43%;
   border-radius: 50%;
   background: linear-gradient(180deg,
-    transparent 2%,
-    rgba(145, 74, 213, 0.10) 24%,
-    rgba(255, 226, 157, 0.25) 50%,
-    rgba(156, 78, 220, 0.11) 76%,
-    transparent 98%);
+      transparent 2%,
+      rgba(145, 74, 213, 0.10) 24%,
+      rgba(255, 226, 157, 0.25) 50%,
+      rgba(156, 78, 220, 0.11) 76%,
+      transparent 98%);
   filter: blur(4px);
   opacity: 0.54;
 }
@@ -718,5 +780,7 @@ body {
     transform: none !important;
     filter: none !important;
   }
-  .startup-magic-layer { display: none; }
+  .startup-magic-layer {
+    display: none;
+  }
 }

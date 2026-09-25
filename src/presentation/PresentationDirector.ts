@@ -44,7 +44,7 @@ export class PresentationDirector {
         presentation.character
       ) {
         // HIGH: prove the real win, then turn the reel viewport into a short
-        // character stage. The same celebration becomes 2B's jackpot bridge.
+        // character stage before restoring the authoritative result.
         await this.reels.presentHighWins(
           evaluation.wins,
           presentation.character,
