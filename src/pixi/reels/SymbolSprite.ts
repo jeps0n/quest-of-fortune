@@ -1,5 +1,4 @@
 import { Container, Graphics, Sprite, Text } from 'pixi.js'
-import type { AudioManager } from '../../audio/AudioManager'
 import type { SymbolId } from '../../game/math/SpinResult'
 import { SymbolAnimator } from './SymbolAnimator'
 import { getSymbolArtwork } from './SymbolAssets'
@@ -47,7 +46,7 @@ export class SymbolSprite {
     },
   })
   private artwork = new Sprite()
-  constructor(id: SymbolId, width: number, height: number, audio: AudioManager) {
+  constructor(id: SymbolId, width: number, height: number) {
     this.id = id
     this.width = width
     this.height = height
@@ -55,7 +54,7 @@ export class SymbolSprite {
     this.artwork.anchor.set(0.5)
     this.view.pivot.set(width / 2, height / 2)
     this.view.addChild(this.plate, this.artwork, this.frameOverlay, this.label)
-    this.animator = new SymbolAnimator(this.view, audio)
+    this.animator = new SymbolAnimator(this.view)
     this.draw()
   }
   get symbolId(): SymbolId { return this.id }

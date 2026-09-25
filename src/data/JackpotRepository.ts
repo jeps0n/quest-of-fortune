@@ -7,8 +7,3 @@ export async function loadJackpots(): Promise<JackpotState | null> {
   if (error) { console.error('Failed to load jackpots:', error); return null }
   return { majorValue: asNumber(data.major_value), grandValue: asNumber(data.grand_value) }
 }
-export async function persistJackpots(state: JackpotState): Promise<boolean> {
-  const { error } = await supabase.from('jackpot_state').update({ major_value: state.majorValue, grand_value: state.grandValue }).eq('id', 1)
-  if (error) { console.error('Failed to persist jackpots:', error); return false }
-  return true
-}

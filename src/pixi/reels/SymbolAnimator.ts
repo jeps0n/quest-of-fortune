@@ -1,6 +1,5 @@
 import { Container } from 'pixi.js'
 import { gsap } from 'gsap'
-import type { AudioManager } from '../../audio/AudioManager'
 type SymbolBeat = 'idle' | 'win' | 'bigWin' | 'dim' | 'reset'
 /**
  * Presentation-only symbol motion. Reel geometry never moves: every beat acts
@@ -8,10 +7,8 @@ type SymbolBeat = 'idle' | 'win' | 'bigWin' | 'dim' | 'reset'
  */
 export class SymbolAnimator {
   private view: Container
-  private audio: AudioManager
-  constructor(view: Container, audio: AudioManager) {
+  constructor(view: Container) {
     this.view = view
-    this.audio = audio
   }
   play(name: SymbolBeat | 'land', delay = 0): Promise<void> {
     if (name === 'land') return this.land()
@@ -31,7 +28,6 @@ export class SymbolAnimator {
     }
   }
   private winBeat(delay: number): Promise<void> {
-    this.audio.play('symbol-win')
     return new Promise((resolve) => {
       const tl = gsap.timeline({ delay, onComplete: resolve })
       // Fast readable hit, tiny recoil, then a confident settle. The second
@@ -64,7 +60,6 @@ export class SymbolAnimator {
     })
   }
   private bigWinBeat(delay: number): Promise<void> {
-    this.audio.play('big-win')
     return new Promise((resolve) => {
       const tl = gsap.timeline({ delay, onComplete: resolve })
       // HIGH symbols get a heavier anticipation/impact beat before the

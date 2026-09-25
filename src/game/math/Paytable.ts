@@ -1,4 +1,4 @@
-import type { SymbolId } from './SpinResult'
+import type { SymbolId } from './SpinResult.ts'
 /*
  * Direct-dollar awards for a fixed $1 total spin.
  * These are NOT line-bet multipliers: a listed $1.25 award pays $1.25.

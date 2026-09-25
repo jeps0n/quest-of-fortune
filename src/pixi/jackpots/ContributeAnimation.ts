@@ -1,14 +1,10 @@
 import { Container, Graphics } from 'pixi.js'
 import { gsap } from 'gsap'
-import type { AudioManager } from '../../audio/AudioManager'
 import { QUEST_LAYOUT } from '../../config/QuestLayout'
 export class ContributeAnimation {
   readonly view = new Container({ label: 'contribute-animation' })
-  private audio: AudioManager
-  constructor(audio: AudioManager) { this.audio = audio }
   async play(majorAmount: number, grandAmount: number): Promise<void> {
     if (majorAmount <= 0 && grandAmount <= 0) return
-    this.audio.play('contribute')
     await Promise.all([
       this.flyTo(QUEST_LAYOUT.jackpotTargets.major.x, QUEST_LAYOUT.jackpotTargets.major.y, majorAmount),
       this.flyTo(QUEST_LAYOUT.jackpotTargets.grand.x, QUEST_LAYOUT.jackpotTargets.grand.y, grandAmount),

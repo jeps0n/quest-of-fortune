@@ -1,5 +1,4 @@
 import { Container } from 'pixi.js'
-import type { AudioManager } from '../../audio/AudioManager'
 import { SYMBOL_IDS, type SymbolId } from '../../game/math/SpinResult'
 import { SymbolSprite } from './SymbolSprite'
 export class ReelSymbolPool {
@@ -7,9 +6,9 @@ export class ReelSymbolPool {
   readonly symbols: SymbolSprite[]
   private cellHeight: number
   private gap: number
-  constructor(size: number, cellWidth: number, cellHeight: number, gap: number, audio: AudioManager) {
+  constructor(size: number, cellWidth: number, cellHeight: number, gap: number) {
     this.cellHeight = cellHeight; this.gap = gap
-    this.symbols = Array.from({ length: size }, (_, i) => new SymbolSprite(SYMBOL_IDS[i % SYMBOL_IDS.length], cellWidth, cellHeight, audio))
+    this.symbols = Array.from({ length: size }, (_, i) => new SymbolSprite(SYMBOL_IDS[i % SYMBOL_IDS.length], cellWidth, cellHeight))
     this.symbols.forEach((symbol) => this.view.addChild(symbol.view)); this.layout()
   }
   get pitch(): number { return this.cellHeight + this.gap }

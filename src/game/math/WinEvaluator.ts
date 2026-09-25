@@ -1,6 +1,6 @@
-import { PAYLINES } from './Paylines'
-import { PAYTABLE } from './Paytable'
-import type { SpinResult, SymbolId } from './SpinResult'
+import { PAYLINES } from './Paylines.ts'
+import { PAYTABLE } from './Paytable.ts'
+import type { SpinResult, SymbolId } from './SpinResult.ts'
 export type JackpotTier = 'mini' | 'minor' | 'major' | 'grand'
 export interface WinPosition { reel: number; row: number }
 export interface Win {

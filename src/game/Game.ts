@@ -1,5 +1,5 @@
-import type { AudioManager } from '../audio/AudioManager'
-import { persistJackpots, type JackpotState } from '../data/JackpotRepository'
+import type { JackpotState } from '../data/JackpotRepository'
+import { requestAuthoritativeSpin, type AuthoritativeSpinResponse } from '../data/SpinApi'
 import { createSpinResult } from './math/SpinResult'
 import { evaluateWins, type JackpotTier, type Win, type WinEvaluation } from './math/WinEvaluator'
 import { GameState } from './GameState'
@@ -30,12 +30,11 @@ export class Game {
   private grandCounter: JackpotCounter
   private presentation: PresentationDirector
   private hud: GameHud
-  private audio: AudioManager
   private hudValues: HudValuePresentation
   private spinOverride: SpinOverride | null
   private balance = STARTING_BALANCE
-  constructor(reels: ReelSet, spinButton: SpinButton, contributeFx: ContributeAnimation, majorCounter: JackpotCounter, grandCounter: JackpotCounter, presentation: PresentationDirector, jackpots: JackpotState, hud: GameHud, audio: AudioManager, spinOverride: SpinOverride | null = null) {
-    this.reels = reels; this.spinButton = spinButton; this.contributeFx = contributeFx; this.majorCounter = majorCounter; this.grandCounter = grandCounter; this.presentation = presentation; this.jackpots = jackpots; this.hud = hud; this.audio = audio; this.spinOverride = spinOverride
+  constructor(reels: ReelSet, spinButton: SpinButton, contributeFx: ContributeAnimation, majorCounter: JackpotCounter, grandCounter: JackpotCounter, presentation: PresentationDirector, jackpots: JackpotState, hud: GameHud, spinOverride: SpinOverride | null = null) {
+    this.reels = reels; this.spinButton = spinButton; this.contributeFx = contributeFx; this.majorCounter = majorCounter; this.grandCounter = grandCounter; this.presentation = presentation; this.jackpots = jackpots; this.hud = hud; this.spinOverride = spinOverride
     this.hudValues = new HudValuePresentation(hud.balance, hud.win)
     this.hudValues.setBalance(this.balance)
   }
@@ -46,16 +45,35 @@ export class Game {
     this.presentation.clear()
     this.hud.message.textContent = 'SPINNING…'
     this.hudValues.resetWin()
+    const demoArmed = this.spinOverride?.selection !== null
+    let authoritative: AuthoritativeSpinResponse | null = null
+    let result
+    let evaluation: WinEvaluation
+    if (demoArmed) {
+      const baseResult = createSpinResult()
+      result = this.spinOverride!.consume(baseResult)
+      evaluation = evaluateWins(result, BET)
+    } else {
+      try {
+        authoritative = await requestAuthoritativeSpin()
+      } catch (error) {
+        console.error('Authoritative spin failed:', error)
+        this.hud.message.textContent = 'SPIN FAILED • TRY AGAIN'
+        this.finish()
+        return
+      }
+      result = authoritative.result
+      evaluation = authoritative.evaluation
+    }
     this.balance = Number((this.balance - BET).toFixed(2))
     this.hudValues.setBalance(this.balance, 'wager')
     const contribution = this.getContributionAmounts()
     await this.previewContribution(contribution.major, contribution.grand)
     await this.reels.resetSymbols()
-    const baseResult = createSpinResult()
-    const result = this.spinOverride?.consume(baseResult) ?? baseResult
     await this.reels.spin(result)
-    const evaluation = evaluateWins(result, BET)
-    const jackpotLabels = await this.resolveJackpotAwards(evaluation)
+    const jackpotLabels = demoArmed
+      ? await this.resolveJackpotAwards(evaluation, contribution.major, contribution.grand)
+      : this.jackpotLabels(evaluation)
     if (evaluation.wins.length > 0) {
       this.state.set('win')
       this.balance = Number((this.balance + evaluation.totalPayout).toFixed(2))
@@ -67,11 +85,19 @@ export class Game {
     }
     await this.presentation.present(evaluation)
     await this.resetAwardedProgressiveCounters(jackpotLabels, evaluation)
-    await this.settleContribution(contribution.major, contribution.grand)
+    if (authoritative) {
+      this.applyAuthoritativeJackpotState(authoritative)
+    } else {
+      await this.settleDemoContribution(contribution.major, contribution.grand, jackpotLabels)
+    }
     this.hud.message.textContent = this.buildSpinMessage(evaluation, contribution.major, contribution.grand, jackpotLabels)
     this.finish()
   }
-  private async resolveJackpotAwards(evaluation: WinEvaluation): Promise<JackpotTier[]> {
+  private async resolveJackpotAwards(
+    evaluation: WinEvaluation,
+    majorContribution: number,
+    grandContribution: number,
+  ): Promise<JackpotTier[]> {
     const awarded = new Set<JackpotTier>()
     for (const win of evaluation.wins) {
       if (!win.jackpot || awarded.has(win.jackpot)) continue
@@ -84,14 +110,14 @@ export class Game {
           win.payout = MINOR_AWARD
           break
         case 'major': {
-          const from = this.jackpots.majorValue
-          win.payout = from
+          const postContributionValue = Number((this.jackpots.majorValue + majorContribution).toFixed(2))
+          win.payout = postContributionValue
           this.jackpots = { ...this.jackpots, majorValue: MAJOR_SEED }
           break
         }
         case 'grand': {
-          const from = this.jackpots.grandValue
-          win.payout = from
+          const postContributionValue = Number((this.jackpots.grandValue + grandContribution).toFixed(2))
+          win.payout = postContributionValue
           this.jackpots = { ...this.jackpots, grandValue: GRAND_SEED }
           break
         }
@@ -112,6 +138,24 @@ export class Game {
     }
     if (tasks.length > 0) await Promise.all(tasks)
   }
+  private jackpotLabels(evaluation: WinEvaluation): JackpotTier[] {
+    return [...new Set(
+      evaluation.wins
+        .map((win) => win.jackpot)
+        .filter((jackpot): jackpot is JackpotTier => jackpot !== undefined),
+    )]
+  }
+  private applyAuthoritativeJackpotState(authoritative: AuthoritativeSpinResponse): void {
+    // The contribution animation has already completed. Reconcile silently to
+    // the server snapshot so shared-progressive activity cannot leave this
+    // browser's meters stale or make another player's contribution look local.
+    this.jackpots = {
+      majorValue: authoritative.majorValue,
+      grandValue: authoritative.grandValue,
+    }
+    this.majorCounter.set(authoritative.majorValue)
+    this.grandCounter.set(authoritative.grandValue)
+  }
   private getContributionAmounts(): { major: number; grand: number } {
     const total = Number((BET * PROGRESSIVE_RATE).toFixed(2))
     const major = Number((total * MAJOR_SHARE).toFixed(2))
@@ -120,9 +164,6 @@ export class Game {
   }
   private async previewContribution(major: number, grand: number): Promise<void> {
     if (major <= 0 && grand <= 0) return
-    // Presentation only: show the wager contribution before the reels move.
-    // The authoritative jackpot state is settled after result evaluation so
-    // jackpot payout/reset ordering remains mathematically unchanged.
     const majorFrom = this.jackpots.majorValue
     const grandFrom = this.jackpots.grandValue
     await Promise.all([
@@ -131,15 +172,18 @@ export class Game {
       this.grandCounter.animate(grandFrom, Number((grandFrom + grand).toFixed(2))),
     ])
   }
-  private async settleContribution(major: number, grand: number): Promise<void> {
+  private async settleDemoContribution(major: number, grand: number, jackpots: readonly JackpotTier[]): Promise<void> {
     if (major <= 0 && grand <= 0) return
-    // Keep the original accounting order: resolve any jackpot first, then
-    // add this spin's contribution to the resulting meter state.
-    this.jackpots = {
-      majorValue: Number((this.jackpots.majorValue + major).toFixed(2)),
-      grandValue: Number((this.jackpots.grandValue + grand).toFixed(2)),
+    const before = this.jackpots
+    const updated = {
+      majorValue: jackpots.includes('major')
+        ? MAJOR_SEED
+        : Number((before.majorValue + major).toFixed(2)),
+      grandValue: jackpots.includes('grand')
+        ? GRAND_SEED
+        : Number((before.grandValue + grand).toFixed(2)),
     }
-    await persistJackpots(this.jackpots)
+    this.jackpots = updated
   }
   private buildSpinMessage(evaluation: WinEvaluation, major: number, grand: number, jackpots: JackpotTier[]): string {
     if (jackpots.length > 0) {
@@ -169,6 +213,5 @@ export class Game {
   private finish(): void { this.state.set('idle'); this.spinButton.setEnabled(true) }
   destroy(): void {
     this.hudValues.destroy()
-    this.audio.destroy()
   }
 }

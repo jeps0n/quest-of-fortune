@@ -41,10 +41,11 @@ export async function createPixiGame(options: CreatePixiGameOptions): Promise<Pi
   await loadSymbolArtwork()
   const layers = createGameLayers(app.stage)
   const audio = new AudioManager()
+  audio.load('win-recognized', 'assets/audio/qof-win-chime.mp3')
   const spinOverride = new SpinOverride()
   const demoControls = new DemoControls(spinOverride)
-  const reels = new ReelSet(audio)
-  const contribute = new ContributeAnimation(audio)
+  const reels = new ReelSet()
+  const contribute = new ContributeAnimation()
   const majorCounter = new JackpotCounter(options.majorElement)
   const grandCounter = new JackpotCounter(options.grandElement)
   const winPresentation = new WinPresentation()
@@ -134,7 +135,7 @@ export async function createPixiGame(options: CreatePixiGameOptions): Promise<Pi
   paytableView.visible = false
   layers.cabinetFx.addChild(contribute.view)
   layers.controls.addChild(spinButton.view, infoButton.view, paytableButton.view, paylinesButton.view, lookOutButton.view)
-  game = new Game(reels, spinButton, contribute, majorCounter, grandCounter, presentationDirector, options.jackpots, { message: options.messageElement, win: options.winElement, balance: options.balanceElement }, audio, spinOverride)
+  game = new Game(reels, spinButton, contribute, majorCounter, grandCounter, presentationDirector, options.jackpots, { message: options.messageElement, win: options.winElement, balance: options.balanceElement }, spinOverride)
   return {
     app,
     layers,
@@ -143,6 +144,7 @@ export async function createPixiGame(options: CreatePixiGameOptions): Promise<Pi
       unsubscribeSpinArmed?.()
       demoControls.destroy()
       game?.destroy()
+      audio.destroy()
       reels.destroy()
       winPresentation.destroy()
       characterWinPresentation.destroy()

@@ -27,3 +27,5 @@ dist-ssr/
 .math-dist/
 .reel-dist/
 .reel-audit-dist/
+# Supabase local CLI metadata
+supabase/.temp/

@@ -1,5 +1,4 @@
 import { gsap } from 'gsap'
-import type { AudioManager } from '../../audio/AudioManager'
 import type { SymbolId } from '../../game/math/SpinResult'
 import type { ReelSymbolPool } from './ReelSymbolPool'
 interface MotionBeat { steps: number; duration: number; ease: string }
@@ -12,23 +11,19 @@ const MOTION = {
 } satisfies Record<string, MotionBeat>
 export class ReelAnimator {
   private pool: ReelSymbolPool
-  private audio: AudioManager
-  constructor(pool: ReelSymbolPool, audio: AudioManager) {
+  constructor(pool: ReelSymbolPool) {
     this.pool = pool
-    this.audio = audio
   }
   async spin(result: readonly SymbolId[], delay: number): Promise<void> {
     if (delay > 0) {
       await new Promise<void>((resolve) => { gsap.delayedCall(delay, resolve) })
     }
-    this.audio.play('spin-start')
     // One continuous-feeling reel cycle: accelerate, cruise, then visibly
     // decelerate. Every phase travels an exact number of symbol pitches so
     // the pool always returns to the locked -pitch resting alignment.
     await this.scroll(MOTION.accelerate)
     await this.scroll(MOTION.cruise)
     await this.scrollResultIntoView(MOTION.brake, result)
-    this.audio.play('reel-stop')
     // The authoritative symbols are already physically in their final rows.
     // There is intentionally no applyVisible() here: repainting at rest is the
     // visual handoff we want to eliminate.

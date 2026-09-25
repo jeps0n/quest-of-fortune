@@ -3,6 +3,11 @@ const money = (value: number): string => `$${value.toLocaleString('en-US', { min
 export class JackpotCounter {
   private element: HTMLElement
   constructor(element: HTMLElement) { this.element = element }
+  set(value: number): void {
+    gsap.killTweensOf(this.element)
+    gsap.set(this.element, { scale: 1 })
+    this.element.textContent = money(value)
+  }
   animate(from: number, to: number): Promise<void> {
     const state = { value: from }
     gsap.killTweensOf(this.element)
