@@ -66,7 +66,19 @@ Quest of Fortune uses five ordered circular reel strips with **201 stops per ree
 
 The game uses **16 fixed paylines**. Standard symbols pay for left-to-right 3-, 4-, or 5-of-a-kind line wins according to the paytable. Character symbols also participate in the jackpot system when five or more matching character symbols appear anywhere in the 5×4 result.
 
-The math tooling targets a **93.6% reset/base RTP**, with a separately funded **2.0% progressive contribution** for a **95.6% funded RTP target**. The simulator combines exact reel-derived calculations with seeded Monte Carlo validation and tracks hit rate and jackpot frequencies.
+The production math is validated through both **exact reel-derived analysis** and a deterministic **5,000,000-spin Monte Carlo simulation**. The exact analysis calculates return and jackpot frequencies directly from the production reel strips, while simulation independently exercises the same math over a large sample.
+
+| Metric | Exact | 5M Simulation |
+| --- | ---: | ---: |
+| Reset / Base RTP | **93.5999%** | **93.6827%** |
+| Funded RTP | **95.5999%** | **95.6827%** |
+| Hit frequency | — | **29.7251%** |
+| MINI frequency | 1 in 399 | 1 in 399 |
+| MINOR frequency | 1 in 999 | 1 in 996 |
+| MAJOR frequency | 1 in 1,999 | 1 in 1,991 |
+| GRAND frequency | 1 in 9,999 | 1 in 9,960 |
+
+The funded RTP includes a separately funded **2.0% progressive contribution**. The close agreement between the exact reel-derived results and the seeded simulation provides an independent validation of the production math configuration.
 
 ## Progressive Jackpots
 
